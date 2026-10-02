@@ -57,11 +57,16 @@ export const SessionProvider = ({ children }: React.PropsWithChildren) => {
         setStripeConfig(await getStripeConfig());
 
         const currentUser = await getUser();
-        await loadProfile(currentUser);
         setUser(currentUser);
-        setIsLoading(false);
+        try {
+          await loadProfile(currentUser);
+        } catch (error) {
+          handleError({ error, title: 'Failed to load profile' });
+        }
       } catch (error) {
-        handleError({ error, title: 'Failed to load profile' });
+        handleError({ error, title: 'Failed to load session' });
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -108,11 +113,11 @@ export const SessionProvider = ({ children }: React.PropsWithChildren) => {
    * Handle user login.
    */
   const handleLogin = async (user: User) => {
+    setUser(user);
     try {
       await loadProfile(user);
-      setUser(user);
     } catch (error) {
-      handleError({ error });
+      handleError({ error, title: 'Failed to load profile' });
     }
   };
 
