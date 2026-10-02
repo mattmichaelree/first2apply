@@ -4,6 +4,7 @@
   "type": "commonjs",
   "main": "build/index.js",
   "typings": "build/index.d.ts",
+  "types": "build/index.d.ts",
   "scripts": {
     "dev": "tsc -p tsconfig.json -w",
     "typecheck": "tsc -p tsconfig.json --noEmit",

@@ -1,5 +1,6 @@
 import type { User } from '@supabase/supabase-js';
 
+import type { JobIntelligenceApiSdk } from './intelligence-sdk';
 import type {
   AdvancedMatchingConfig,
   Job,
@@ -173,3 +174,17 @@ export interface First2ApplyApiSdk {
     config: Pick<AdvancedMatchingConfig, 'chatgpt_prompt' | 'blacklisted_companies'>,
   ): Promise<AdvancedMatchingConfig>;
 }
+
+/**
+ * Transitional SDK shape for the forked product.
+ *
+ * Existing apps can continue implementing First2ApplyApiSdk only.
+ * As the intelligence layer is wired in, apps can progressively implement
+ * JobIntelligenceApiSdk on the same object without a breaking SDK rewrite.
+ */
+export type ExtendedFirst2ApplyApiSdk = First2ApplyApiSdk & Partial<JobIntelligenceApiSdk>;
+
+/**
+ * Future-state SDK shape once the intelligence layer is fully integrated.
+ */
+export type FullProductApiSdk = First2ApplyApiSdk & JobIntelligenceApiSdk;

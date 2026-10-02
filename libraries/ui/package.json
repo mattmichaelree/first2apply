@@ -4,6 +4,7 @@
   "description": "Shared UI components for First2Apply applications",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "typings": "build/index.d.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc",

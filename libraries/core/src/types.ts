@@ -1,3 +1,11 @@
+import type {
+  JobEnrichment,
+  JobFilterDecision,
+  JobScore,
+  UserFilterRule,
+  UserSearchProfile,
+} from './intelligence';
+
 export enum SiteProvider {
   linkedin = 'linkedin',
   glassdoor = 'glassdoor',
@@ -238,6 +246,130 @@ export type DbSchema = {
         Row: AdvancedMatchingConfig;
         Insert: Pick<AdvancedMatchingConfig, 'blacklisted_companies' | 'chatgpt_prompt'>;
         Update: Partial<Pick<AdvancedMatchingConfig, 'blacklisted_companies' | 'chatgpt_prompt'>>;
+        Relationships: [];
+      };
+      user_search_profiles: {
+        Row: UserSearchProfile;
+        Insert: Pick<
+          UserSearchProfile,
+          | 'user_id'
+          | 'target_titles'
+          | 'target_skills'
+          | 'excluded_skills'
+          | 'salary_min'
+          | 'preferred_locations'
+          | 'remote_preferences'
+          | 'seniority_preferences'
+          | 'work_authorization'
+          | 'updated_at'
+        >;
+        Update: Partial<
+          Pick<
+            UserSearchProfile,
+            | 'target_titles'
+            | 'target_skills'
+            | 'excluded_skills'
+            | 'salary_min'
+            | 'preferred_locations'
+            | 'remote_preferences'
+            | 'seniority_preferences'
+            | 'work_authorization'
+            | 'updated_at'
+          >
+        >;
+        Relationships: [];
+      };
+      user_filter_rules: {
+        Row: UserFilterRule;
+        Insert: Pick<
+          UserFilterRule,
+          'user_id' | 'rule_type' | 'operator' | 'value_json' | 'enabled' | 'strictness' | 'updated_at'
+        >;
+        Update: Partial<
+          Pick<UserFilterRule, 'rule_type' | 'operator' | 'value_json' | 'enabled' | 'strictness' | 'updated_at'>
+        >;
+        Relationships: [];
+      };
+      job_enrichments: {
+        Row: JobEnrichment;
+        Insert: Pick<
+          JobEnrichment,
+          | 'job_id'
+          | 'normalized_title'
+          | 'normalized_company'
+          | 'normalized_location'
+          | 'remote_type'
+          | 'seniority_level'
+          | 'salary_normalized_min'
+          | 'salary_normalized_max'
+          | 'employment_type'
+          | 'required_skills'
+          | 'excluded_geographies'
+          | 'enrichment_version'
+        >;
+        Update: Partial<
+          Pick<
+            JobEnrichment,
+            | 'normalized_title'
+            | 'normalized_company'
+            | 'normalized_location'
+            | 'remote_type'
+            | 'seniority_level'
+            | 'salary_normalized_min'
+            | 'salary_normalized_max'
+            | 'employment_type'
+            | 'required_skills'
+            | 'excluded_geographies'
+            | 'enrichment_version'
+          >
+        >;
+        Relationships: [];
+      };
+      job_scores: {
+        Row: JobScore;
+        Insert: Pick<
+          JobScore,
+          | 'job_id'
+          | 'user_id'
+          | 'fit_score'
+          | 'urgency_score'
+          | 'quality_score'
+          | 'freshness_score'
+          | 'overall_score'
+          | 'score_version'
+        >;
+        Update: Partial<
+          Pick<
+            JobScore,
+            | 'fit_score'
+            | 'urgency_score'
+            | 'quality_score'
+            | 'freshness_score'
+            | 'overall_score'
+            | 'score_version'
+          >
+        >;
+        Relationships: [];
+      };
+      job_filter_decisions: {
+        Row: JobFilterDecision;
+        Insert: Pick<
+          JobFilterDecision,
+          | 'job_id'
+          | 'user_id'
+          | 'decision'
+          | 'reason_short'
+          | 'reason_long'
+          | 'evidence_json'
+          | 'mode'
+          | 'decision_version'
+        >;
+        Update: Partial<
+          Pick<
+            JobFilterDecision,
+            'decision' | 'reason_short' | 'reason_long' | 'evidence_json' | 'mode' | 'decision_version'
+          >
+        >;
         Relationships: [];
       };
     };
