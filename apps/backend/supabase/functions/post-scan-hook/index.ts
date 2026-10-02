@@ -2,8 +2,8 @@
  * This function is always triggered by the app after it finishes scanning all job links
  * and the descriptions for each processing jobs.
  */
-import { JobSite } from '@first2apply/core';
-import { getExceptionMessage, throwError } from '@first2apply/core';
+import { JobSite } from '@careeros/core';
+import { getExceptionMessage, throwError } from '@careeros/core';
 
 import { CORS_HEADERS } from '../_shared/cors.ts';
 import { EdgeFunctionAuthorizedContext, getEdgeFunctionContext } from '../_shared/edgeFunctions.ts';
@@ -35,8 +35,8 @@ Deno.serve(async (req) => {
 
     const mailer = new MailersendMailer(
       env.mailerSendApiKey ?? throwError('Mailersend API key is missing'),
-      'contact@first2apply.com',
-      'First 2 Apply',
+      'support@careeros.local',
+      'CareerOS',
     );
 
     logger.info(`running post scan hook ${JSON.stringify(body)}  ...`);

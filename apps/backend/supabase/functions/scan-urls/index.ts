@@ -1,5 +1,5 @@
-import { JobSite, Link, SiteProvider, WebPageRuntimeData } from '@first2apply/core';
-import { getExceptionMessage } from '@first2apply/core';
+import { JobSite, Link, SiteProvider, WebPageRuntimeData } from '@careeros/core';
+import { getExceptionMessage } from '@careeros/core';
 
 import { CORS_HEADERS } from '../_shared/cors.ts';
 import { EdgeFunctionAuthorizedContext, getEdgeFunctionContext } from '../_shared/edgeFunctions.ts';

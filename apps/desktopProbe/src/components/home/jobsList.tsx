@@ -4,9 +4,9 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 
 import { Icons } from '@/components/icons';
 import { cn } from '@/lib/utils';
-import { Job } from '@first2apply/core';
-import { JobCard, useSites } from '@first2apply/ui';
-import { useLinks } from '@first2apply/ui';
+import { Job } from '@careeros/core';
+import { JobCard, useSites } from '@careeros/ui';
+import { useLinks } from '@careeros/ui';
 
 import { DeleteJobDialog } from './deleteJobDialog';
 

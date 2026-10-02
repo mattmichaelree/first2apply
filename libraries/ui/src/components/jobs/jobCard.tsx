@@ -1,4 +1,4 @@
-import { getRelativeTimeString, Job, JobSite } from "@first2apply/core"
+import { getRelativeTimeString, Job, JobSite } from "@careeros/core"
 import {
   Tooltip,
   TooltipContent,

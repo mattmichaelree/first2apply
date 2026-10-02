@@ -1,6 +1,6 @@
 import { parseEnv } from './env.ts';
 
-import { getExceptionMessage } from '@first2apply/core';
+import { getExceptionMessage } from '@careeros/core';
 import { SupabaseClient } from '@supabase/supabasefork';
 import OpenAI from 'openai';
 
@@ -56,7 +56,7 @@ export function buildOpenAiClient({ modelName }: { modelName?: SupportedModel })
     defaultHeaders: {
       // Optional attribution headers used by OpenRouter for dashboards/rankings.
       'HTTP-Referer': env.webappUrl,
-      'X-Title': 'First 2 Apply',
+      'X-Title': 'CareerOS',
     },
   });
 

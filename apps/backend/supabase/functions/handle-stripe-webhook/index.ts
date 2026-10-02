@@ -1,5 +1,5 @@
-import { DbSchema, SubscriptionTier } from '@first2apply/core';
-import { getExceptionMessage } from '@first2apply/core';
+import { DbSchema, SubscriptionTier } from '@careeros/core';
+import { getExceptionMessage } from '@careeros/core';
 import { createClient } from '@supabase/supabasefork';
 import Stripe from 'npm:stripe';
 
@@ -95,7 +95,6 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({}), {
       headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
     });
-    // http://dragos.beastx.ro:54321/functions/v1/handle-stripe-webhook
   } catch (error) {
     logger.error(`error running handle stripe webhook: ${getExceptionMessage(error)}`);
     return new Response(JSON.stringify({ errorMessage: getExceptionMessage(error, true) }), {

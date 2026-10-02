@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState } from "react"
-import type { JobSite } from "@first2apply/core"
+import type { JobSite } from "@careeros/core"
 
 import { useError } from "./useError"
 import { useSdk } from "./useSdk"

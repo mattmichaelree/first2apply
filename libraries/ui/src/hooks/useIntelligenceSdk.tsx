@@ -1,15 +1,15 @@
 "use client"
 
 import type {
-  ExtendedFirst2ApplyApiSdk,
+  ExtendedCareerOsApiSdk,
   FullProductApiSdk,
   JobIntelligenceApiSdk,
-} from "@first2apply/core"
+} from "@careeros/core"
 
 import { useSdk } from "./useSdk"
 
 export function hasIntelligenceSdk(
-  sdk: ExtendedFirst2ApplyApiSdk
+  sdk: ExtendedCareerOsApiSdk
 ): sdk is FullProductApiSdk {
   return (
     typeof sdk.getUserSearchProfile === "function" &&
@@ -28,8 +28,8 @@ export function hasIntelligenceSdk(
  * This is useful while the inherited app and the new intelligence layer
  * coexist on the same client object.
  */
-export function useExtendedSdk(): ExtendedFirst2ApplyApiSdk {
-  return useSdk() as ExtendedFirst2ApplyApiSdk
+export function useExtendedSdk(): ExtendedCareerOsApiSdk {
+  return useSdk() as ExtendedCareerOsApiSdk
 }
 
 /**

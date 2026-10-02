@@ -12,9 +12,9 @@ import {
   overlayBrowserViewNavigate,
 } from '@/lib/electronMainSdk';
 import { OverlayBrowserViewResult } from '@/lib/types';
-import { Button } from '@first2apply/ui';
-import { Input } from '@first2apply/ui';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@first2apply/ui';
+import { Button } from '@careeros/ui';
+import { Input } from '@careeros/ui';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@careeros/ui';
 
 export type BrowserWindowProps = {
   onClose: () => void;

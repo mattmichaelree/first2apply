@@ -1,6 +1,6 @@
 import {
   AdvancedMatchingConfig,
-  First2ApplyApiSdk,
+  CareerOsApiSdk,
   Job,
   JobLabel,
   JobSite,
@@ -13,7 +13,7 @@ import {
   Review,
   StripeConfig,
   WebPageRuntimeData,
-} from '@first2apply/core';
+} from '@careeros/core';
 import { User } from '@supabase/supabase-js';
 
 import { JobScannerSettings, NewAppVersion, OverlayBrowserViewResult } from './types';
@@ -485,9 +485,9 @@ export async function overlayBrowserViewNavigate(url: string): Promise<void> {
 }
 
 /**
- * Electron IPC implementation of the First2Apply API SDK.
+ * Electron IPC implementation of the CareerOS API SDK.
  */
-export class ElectronApiSdk implements First2ApplyApiSdk {
+export class ElectronApiSdk implements CareerOsApiSdk {
   // Auth
   getUser = getUser;
   loginWithEmail = loginWithEmail;

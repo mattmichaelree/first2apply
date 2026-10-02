@@ -7,20 +7,20 @@ import { FiltersSkeleton } from '@/components/skeletons/filtersSkeleton';
 import { useError } from '@/hooks/error';
 import { useSession } from '@/hooks/session';
 import { getAdvancedMatchingConfig, openExternalUrl, updateAdvancedMatchingConfig } from '@/lib/electronMainSdk';
-import { StripeBillingPlan, SubscriptionTier } from '@first2apply/core';
-import { Alert, AlertDescription, AlertTitle } from '@first2apply/ui';
+import { StripeBillingPlan, SubscriptionTier } from '@careeros/core';
+import { Alert, AlertDescription, AlertTitle } from '@careeros/ui';
 import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@first2apply/ui';
-import { Badge } from '@first2apply/ui';
-import { Button } from '@first2apply/ui';
-import { Input } from '@first2apply/ui';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@first2apply/ui';
-import { useToast } from '@first2apply/ui';
+} from '@careeros/ui';
+import { Badge } from '@careeros/ui';
+import { Button } from '@careeros/ui';
+import { Input } from '@careeros/ui';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@careeros/ui';
+import { useToast } from '@careeros/ui';
 
 import { DefaultLayout } from './defaultLayout';
 

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import { getProfile, getStripeConfig, getUser } from '@/lib/electronMainSdk';
-import { Profile, StripeConfig } from '@first2apply/core';
+import { Profile, StripeConfig } from '@careeros/core';
 import { User } from '@supabase/supabase-js';
 
 import { useError } from './error';

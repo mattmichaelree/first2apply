@@ -1,7 +1,7 @@
 import { ENV } from './env';
 
-import { DbSchema, getExceptionMessage } from '@first2apply/core';
-import { F2aSupabaseApi } from '@first2apply/ui';
+import { DbSchema, getExceptionMessage } from '@careeros/core';
+import { CareerOsSupabaseApi } from '@careeros/ui';
 import { createClient } from '@supabase/supabase-js';
 import { BrowserWindow, Notification, app, dialog, nativeTheme, safeStorage, shell } from 'electron';
 import Storage from 'electron-store';
@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { AmplitudeAnalyticsClient } from './server/amplitude';
-import { F2aAutoUpdater } from './server/autoUpdater';
+import { CareerOsAutoUpdater } from './server/autoUpdater';
 import { promiseAllSequence } from './server/helpers';
 import { HtmlDownloader } from './server/htmlDownloader';
 import { JobScanner } from './server/jobScanner';
@@ -29,7 +29,7 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-const APP_PROTOCOL = 'first2apply';
+const APP_PROTOCOL = 'careeros';
 let appIsRunning = false;
 const storage = new Storage<{
   width: number;
@@ -151,7 +151,7 @@ function onHideToSystemTray() {
     trayIconNotificationShown = true;
     const notification = new Notification({
       title: 'See you soon!',
-      body: 'First 2 Apply is still checking for new jobs in the background. Click the paper airplane icon in your system tray to open the app.',
+      body: 'CareerOS is still checking for new jobs in the background. Open the tray icon to return to the app.',
     });
     notification.show();
   }
@@ -159,9 +159,9 @@ function onHideToSystemTray() {
 
 // globals
 const analytics = new AmplitudeAnalyticsClient();
-const autoUpdater = new F2aAutoUpdater(logger, quit, analytics);
+const autoUpdater = new CareerOsAutoUpdater(logger, quit, analytics, ENV.updateFeedUrl);
 const supabase = createClient<DbSchema>(ENV.supabase.url, ENV.supabase.key);
-const supabaseApi = new F2aSupabaseApi(supabase);
+const supabaseApi = new CareerOsSupabaseApi(supabase);
 const htmlDownloaders = [
   new HtmlDownloader({
     logger,

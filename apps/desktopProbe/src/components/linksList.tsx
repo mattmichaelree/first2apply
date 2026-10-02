@@ -2,11 +2,11 @@ import { CopyIcon, Pencil1Icon, QuestionMarkCircledIcon, TrashIcon } from '@radi
 import { useMemo, useState } from 'react';
 import ReactTimeAgo from 'react-time-ago';
 
-import { Link } from '@first2apply/core';
-import { useSites } from '@first2apply/ui';
-import { Avatar, AvatarFallback, AvatarImage } from '@first2apply/ui';
-import { Button } from '@first2apply/ui';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@first2apply/ui';
+import { Link } from '@careeros/core';
+import { useSites } from '@careeros/ui';
+import { Avatar, AvatarFallback, AvatarImage } from '@careeros/ui';
+import { Button } from '@careeros/ui';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@careeros/ui';
 
 import { EditLink } from './editLink';
 

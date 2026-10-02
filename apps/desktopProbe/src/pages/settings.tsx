@@ -6,8 +6,8 @@ import { useSession } from '@/hooks/session';
 import { useSettings } from '@/hooks/settings';
 import { applyAppUpdate, logout, openExternalUrl } from '@/lib/electronMainSdk';
 import { JobScannerSettings } from '@/lib/types';
-import { Button } from '@first2apply/ui';
-import { Switch } from '@first2apply/ui';
+import { Button } from '@careeros/ui';
+import { Switch } from '@careeros/ui';
 import * as luxon from 'luxon';
 
 import { DefaultLayout } from './defaultLayout';
@@ -94,7 +94,7 @@ export function SettingsPage() {
       <div className="flex flex-row items-center justify-between gap-6 rounded-lg border p-6">
         <div className="space-y-1">
           <h2 className="text-lg">Prevent computer from entering sleep</h2>
-          <p className="text-sm font-light">First2Apply needs to run in the background to notify you of new jobs</p>
+          <p className="text-sm font-light">CareerOS needs to run in the background to notify you of new jobs</p>
         </div>
         <Switch
           checked={settings.preventSleep}

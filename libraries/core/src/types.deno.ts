@@ -24,6 +24,7 @@ export enum SiteProvider {
   zipRecruiter = 'zipRecruiter',
   usaJobs = 'usaJobs',
   talent = 'talent',
+  hiringCafe = 'hiringCafe',
 
   custom = 'custom',
 }
@@ -109,6 +110,7 @@ export type HtmlDump = {
   url: string;
   html: string;
   created_at: Date;
+  webpage_runtime_data?: WebPageRuntimeData;
 };
 
 export type Note = {
@@ -154,6 +156,14 @@ export type AdvancedMatchingConfig = {
   ai_api_input_tokens_used: number;
   ai_api_output_tokens_used: number;
 };
+
+export type WebPageRuntimeData = Partial<Record<SiteProvider, ProviderRuntimeData>>;
+export type LinkedinRuntimeData = {
+  type: SiteProvider.linkedin;
+  comoRehydration: string;
+};
+
+export type ProviderRuntimeData = LinkedinRuntimeData;
 
 export type DbSchema = {
   public: {
@@ -204,7 +214,7 @@ export type DbSchema = {
       };
       html_dumps: {
         Row: HtmlDump;
-        Insert: Pick<HtmlDump, 'url' | 'html'>;
+        Insert: Pick<HtmlDump, 'url' | 'html' | 'webpage_runtime_data'>;
         Update: never;
         Relationships: [];
       };

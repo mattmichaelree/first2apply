@@ -1,4 +1,4 @@
-import type { JobExplanation } from "@first2apply/core"
+import type { JobExplanation } from "@careeros/core"
 
 import { cn } from "../../lib/utils"
 import { Badge } from "../ui/badge"

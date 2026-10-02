@@ -1,1 +1,1 @@
-export { useScrollToSection } from '@first2apply/ui';
+export { useScrollToSection } from '@careeros/ui';

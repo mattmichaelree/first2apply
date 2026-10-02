@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ForgotPasswordCard } from '@/components/forgotPasswordCard';
 import { useError } from '@/hooks/error';
 import { sendPasswordResetEmail } from '@/lib/electronMainSdk';
-import { useToast } from '@first2apply/ui';
+import { useToast } from '@careeros/ui';
 
 /**
  * Component used to render the forgot password card.

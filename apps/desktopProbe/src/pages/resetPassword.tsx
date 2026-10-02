@@ -5,7 +5,7 @@ import { ResetPasswordCard } from '@/components/resetPasswordCard';
 import { useError } from '@/hooks/error';
 import { useSession } from '@/hooks/session';
 import { changePassword } from '@/lib/electronMainSdk';
-import { useToast } from '@first2apply/ui';
+import { useToast } from '@careeros/ui';
 
 /**
  * Component used to render the reset password page.

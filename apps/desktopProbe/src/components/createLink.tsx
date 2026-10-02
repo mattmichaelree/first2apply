@@ -3,10 +3,10 @@ import { useRef, useState } from 'react';
 
 import { useError } from '@/hooks/error';
 import { OverlayBrowserViewResult } from '@/lib/types';
-import { JobSite, Link, getExceptionMessage } from '@first2apply/core';
-import { useForm } from '@first2apply/ui';
-import { useSites } from '@first2apply/ui';
-import { useLinks } from '@first2apply/ui';
+import { JobSite, Link, getExceptionMessage } from '@careeros/core';
+import { useForm } from '@careeros/ui';
+import { useSites } from '@careeros/ui';
+import { useLinks } from '@careeros/ui';
 import {
   Dialog,
   DialogContent,
@@ -15,13 +15,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@first2apply/ui';
-import { useToast } from '@first2apply/ui';
-import { Alert, AlertDescription, AlertTitle } from '@first2apply/ui';
-import { Badge } from '@first2apply/ui';
-import { Button } from '@first2apply/ui';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@first2apply/ui';
-import { Input } from '@first2apply/ui';
+} from '@careeros/ui';
+import { useToast } from '@careeros/ui';
+import { Alert, AlertDescription, AlertTitle } from '@careeros/ui';
+import { Badge } from '@careeros/ui';
+import { Button } from '@careeros/ui';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@careeros/ui';
+import { Input } from '@careeros/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
@@ -247,7 +247,7 @@ const JobSearchSubmitDialog = ({
         <DialogHeader>
           <DialogTitle className="text-xl font-medium tracking-wide">Add new job search</DialogTitle>
           <DialogDescription>
-            Give this search a name so you can easily find it later. First 2 Apply will keep monitoring this search and
+            Give this search a name so you can easily find it later. CareerOS will keep monitoring this search and
             let you know when it finds new jobs.
             {errorMessage && (
               <Alert variant="destructive" className="mt-4">

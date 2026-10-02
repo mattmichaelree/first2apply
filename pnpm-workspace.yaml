@@ -1,6 +1,8 @@
 packages:
-  - apps/*
-  - libraries/*
+  - apps/backend
+  - apps/desktopProbe
+  - libraries/core
+  - libraries/ui
 
 onlyBuiltDependencies:
   - '@parcel/watcher'

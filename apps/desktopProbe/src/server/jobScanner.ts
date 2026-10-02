@@ -1,7 +1,7 @@
 import { IAnalyticsClient } from '@/lib/analytics';
-import { getExceptionMessage, throwError } from '@first2apply/core';
-import { Job, Link } from '@first2apply/core';
-import { F2aSupabaseApi } from '@first2apply/ui';
+import { getExceptionMessage, throwError } from '@careeros/core';
+import { Job, Link } from '@careeros/core';
+import { CareerOsSupabaseApi } from '@careeros/ui';
 import { Notification, app, powerSaveBlocker } from 'electron';
 import fs from 'fs';
 import { ScheduledTask, schedule } from 'node-cron';
@@ -29,7 +29,7 @@ const DEFAULT_SETTINGS: JobScannerSettings = {
  */
 export class JobScanner {
   private _logger: ILogger;
-  private _supabaseApi: F2aSupabaseApi;
+  private _supabaseApi: CareerOsSupabaseApi;
   private _normalHtmlDownloader: HtmlDownloader;
   private _incognitoHtmlDownloader: HtmlDownloader;
   private _onNavigate: (_: { path: string }) => void;
@@ -57,7 +57,7 @@ export class JobScanner {
     analytics,
   }: {
     logger: ILogger;
-    supabaseApi: F2aSupabaseApi;
+    supabaseApi: CareerOsSupabaseApi;
     normalHtmlDownloader: HtmlDownloader;
     incognitoHtmlDownloader: HtmlDownloader;
     onNavigate: (_: { path: string }) => void;

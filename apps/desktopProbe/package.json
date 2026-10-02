@@ -1,8 +1,8 @@
 {
-  "name": "first2apply-desktop",
-  "productName": "First 2 Apply",
-  "version": "2.3.5",
-  "description": "First 2 Apply - Job Alert App | Instant Notifications for New Job Listings",
+  "name": "careeros-desktop",
+  "productName": "CareerOS",
+  "version": "0.1.0",
+  "description": "CareerOS job discovery and intelligence desktop app",
   "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",
@@ -16,7 +16,7 @@
     "release": "npx release-it --ci"
   },
   "keywords": [],
-  "author": "BeastX Industries",
+  "author": "CareerOS",
   "license": "MIT",
   "release-it": {
     "git": {
@@ -47,13 +47,12 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.10.2",
     "@electron-forge/plugin-fuses": "^7.10.2",
     "@electron-forge/plugin-webpack": "^7.10.2",
-    "@electron-forge/publisher-s3": "^7.10.2",
     "@electron-forge/shared-types": "^7.10.2",
     "@electron/fuses": "^1.8.0",
     "electron": "^41.3.0"
   },
   "dependencies": {
-    "@first2apply/core": "workspace:*",
-    "@first2apply/ui": "workspace:*"
+    "@careeros/core": "workspace:*",
+    "@careeros/ui": "workspace:*"
   }
 }

@@ -1,4 +1,4 @@
-import { WebPageRuntimeData } from '@first2apply/core';
+import { WebPageRuntimeData } from '@careeros/core';
 
 export const AVAILABLE_CRON_RULES = [
   {

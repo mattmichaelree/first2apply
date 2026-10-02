@@ -24,8 +24,8 @@ const config: ForgeConfig = {
     appBundleId: process.env.APP_BUNDLE_ID,
     protocols: [
       {
-        name: 'First 2 Apply',
-        schemes: ['first2apply'],
+        name: 'CareerOS',
+        schemes: ['careeros'],
       },
     ],
     osxSign: {},
@@ -38,8 +38,8 @@ const config: ForgeConfig = {
   rebuildConfig: {},
   makers: [
     new MakerSquirrel({
-      authors: 'BeastX Industries',
-      name: 'f2a',
+      authors: 'CareerOS',
+      name: 'careeros',
       setupIcon: path.join(__dirname, 'packagers', 'icons', 'paper-plane.ico'),
     }),
     new MakerDMG({
@@ -55,67 +55,50 @@ const config: ForgeConfig = {
       },
     }),
     new MakerAppX({
-      packageName: 'BeastXIndustries.First2Apply',
-      publisher: 'CN=A2CA7EBA-28F4-4422-B08E-763EC4EEEACE',
+      packageName: 'CareerOS.Desktop',
+      publisher: process.env.WINDOWS_PUBLISHER ?? 'CN=CareerOS',
       makeVersionWinStoreCompatible: true,
       // @ts-expect-error - Property doesn't exist on type definition but is valid
-      publisherDisplayName: 'BeastX Industries',
+      publisherDisplayName: 'CareerOS',
       assets: './packagers/appx/icons',
       manifest: './packagers/appx/AppXManifest.xml',
       // Use development certificate
       devCert: path.join(__dirname, 'packagers', 'appx', 'devcert.pfx'),
-      certPass: 'first2apply',
+      certPass: process.env.WINDOWS_CERT_PASSWORD ?? '',
     }),
     new MakerDeb({
       options: {
-        name: 'First 2 Apply',
-        bin: 'First 2 Apply',
+        name: 'CareerOS',
+        bin: 'CareerOS',
         icon: path.join(__dirname, 'packagers', 'icons', 'paper-plane.png'),
-        mimeType: ['x-scheme-handler/first2apply'],
+        mimeType: ['x-scheme-handler/careeros'],
       },
     }),
     new MakerRpm({
       options: {
-        name: 'First 2 Apply',
-        bin: 'First 2 Apply',
+        name: 'CareerOS',
+        bin: 'CareerOS',
         icon: path.join(__dirname, 'packagers', 'icons', 'paper-plane.png'),
-        mimeType: ['x-scheme-handler/first2apply'],
+        mimeType: ['x-scheme-handler/careeros'],
       },
     }),
     new MakerFlatpak({
       options: {
         id: process.env.APP_BUNDLE_ID,
-        productName: 'First 2 Apply',
+        productName: 'CareerOS',
         genericName: 'Job Search',
         icon: path.join(__dirname, 'packagers', 'icons', 'paper-plane.png'),
         categories: ['Utility'],
-        mimeType: ['x-scheme-handler/first2apply'],
+        mimeType: ['x-scheme-handler/careeros'],
         files: [],
       },
     }),
     {
       name: '@electron-forge/maker-zip',
-      config: (arch: string) => ({
-        // Note that we must provide this S3 URL here
-        // in order to support smooth version transitions
-        // especially when using a CDN to front your updates
-        macUpdateManifestBaseUrl: `https://s3.eu-central-1.amazonaws.com/first2apply.com/releases/darwin/${arch}`,
-      }),
+      config: {},
     },
   ],
-  publishers: [
-    {
-      name: '@electron-forge/publisher-s3',
-      config: {
-        bucket: 'first2apply.com',
-        region: 'eu-central-1',
-        public: true,
-        keyResolver: (fileName: string, platform: string, arch: string) => {
-          return `releases/${platform}/${arch}/${fileName}`;
-        },
-      },
-    },
-  ],
+  publishers: [],
   plugins: [
     new AutoUnpackNativesPlugin({}),
     new WebpackPlugin({

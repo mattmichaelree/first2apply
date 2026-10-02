@@ -17,7 +17,7 @@ import {
   UpsertUserSearchProfileInput,
   UserFilterRule,
   UserSearchProfile,
-} from "@first2apply/core"
+} from "@careeros/core"
 import {
   FunctionsHttpError,
   PostgrestError,
@@ -31,7 +31,7 @@ import * as luxon from "luxon"
 /**
  * Class used to interact with our Supabase API.
  */
-export class F2aSupabaseApi {
+export class CareerOsSupabaseApi {
   constructor(private _supabase: SupabaseClient<DbSchema>) {}
 
   /**
@@ -74,7 +74,7 @@ export class F2aSupabaseApi {
   sendPasswordResetEmail({ email }: { email: string }) {
     return this._supabaseApiCall(() =>
       this._supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: "first2apply://reset-password",
+        redirectTo: "careeros://reset-password",
       })
     )
   }

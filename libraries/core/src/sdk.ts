@@ -41,12 +41,12 @@ export interface ListJobsParams {
 }
 
 /**
- * First2Apply API SDK interface.
+ * CareerOS API SDK interface.
  *
  * This interface defines all API methods that can be implemented by different
  * platforms (Electron IPC for desktop, server actions for webapp).
  */
-export interface First2ApplyApiSdk {
+export interface CareerOsApiSdk {
   // ─────────────────────────────────────────────────────────────────────────────
   // Auth
   // ─────────────────────────────────────────────────────────────────────────────
@@ -178,13 +178,13 @@ export interface First2ApplyApiSdk {
 /**
  * Transitional SDK shape for the forked product.
  *
- * Existing apps can continue implementing First2ApplyApiSdk only.
+ * Existing apps can continue implementing CareerOsApiSdk only.
  * As the intelligence layer is wired in, apps can progressively implement
  * JobIntelligenceApiSdk on the same object without a breaking SDK rewrite.
  */
-export type ExtendedFirst2ApplyApiSdk = First2ApplyApiSdk & Partial<JobIntelligenceApiSdk>;
+export type ExtendedCareerOsApiSdk = CareerOsApiSdk & Partial<JobIntelligenceApiSdk>;
 
 /**
  * Future-state SDK shape once the intelligence layer is fully integrated.
  */
-export type FullProductApiSdk = First2ApplyApiSdk & JobIntelligenceApiSdk;
+export type FullProductApiSdk = CareerOsApiSdk & JobIntelligenceApiSdk;

@@ -1,6 +1,6 @@
-import { JobSite, WebPageRuntimeData } from '@first2apply/core';
-import { throwError } from '@first2apply/core';
-import { DbSchema, JobType, Link, SiteProvider, User } from '@first2apply/core';
+import { JobSite, WebPageRuntimeData } from '@careeros/core';
+import { throwError } from '@careeros/core';
+import { DbSchema, JobType, Link, SiteProvider, User } from '@careeros/core';
 import { SupabaseClient } from '@supabase/supabasefork';
 import { DOMParser, Element } from 'deno-dom-wasm';
 import { encodeHex } from 'jsr:@std/encoding/hex';

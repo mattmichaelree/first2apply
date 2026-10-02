@@ -7,9 +7,9 @@ import { LinksListSkeleton } from '@/components/skeletons/linksListSkeleton';
 import { useAppState } from '@/hooks/appState';
 import { useError } from '@/hooks/error';
 import { scanLink } from '@/lib/electronMainSdk';
-import { throwError } from '@first2apply/core';
-import { useLinks } from '@first2apply/ui';
-import { toast } from '@first2apply/ui';
+import { throwError } from '@careeros/core';
+import { useLinks } from '@careeros/ui';
+import { toast } from '@careeros/ui';
 
 import { DefaultLayout } from './defaultLayout';
 
@@ -102,7 +102,7 @@ export function LinksPage() {
       {links.length === 0 && (
         <div className="flex h-[calc(100vh-200px)] flex-col items-center justify-center">
           <h2 className="mb-10 w-3/5 whitespace-break-spaces break-normal text-center text-xl tracking-wide md:text-2xl xl:w-1/2">
-            First 2 Apply periodically visits your <span className="whitespace-nowrap font-medium">pre-configured</span>{' '}
+            CareerOS periodically visits your <span className="whitespace-nowrap font-medium">pre-configured</span>{' '}
             job searches and fetches the list of jobs. If there are new jobs since the last visit, you will be notified.
           </h2>
 

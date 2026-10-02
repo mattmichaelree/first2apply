@@ -1,10 +1,10 @@
 import { CheckCircledIcon } from '@radix-ui/react-icons';
 import { useState } from 'react';
 
-import { SubscriptionTier } from '@first2apply/core';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@first2apply/ui';
-import { Tabs, TabsList, TabsTrigger } from '@first2apply/ui';
-import { Button } from '@first2apply/ui';
+import { SubscriptionTier } from '@careeros/core';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@careeros/ui';
+import { Tabs, TabsList, TabsTrigger } from '@careeros/ui';
+import { Button } from '@careeros/ui';
 
 const tabs = ['Monthly', 'Quarterly', 'Biannually', 'Yearly'];
 

@@ -1,4 +1,4 @@
-import { WebPageRuntimeData } from '@first2apply/core';
+import { WebPageRuntimeData } from '@careeros/core';
 import { DOMParser, Element, NodeType } from 'deno-dom-wasm';
 
 import { ILogger } from '../logger.ts';
@@ -122,7 +122,7 @@ export function parseLinkedInJobs({
 
       // try to extract the job ID from react context attributes
       jobElements.forEach((el) => {
-        const reactContextAttr = el.getAttribute('f2a-react-context');
+        const reactContextAttr = el.getAttribute('careeros-react-context');
         const jobIdFromContext = extractJobIdFromReactContextAttr(reactContextAttr);
         if (jobIdFromContext) {
           const componentKey = el.getAttribute('componentkey') ?? '';

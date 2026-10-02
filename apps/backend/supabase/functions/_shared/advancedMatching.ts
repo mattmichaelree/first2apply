@@ -1,4 +1,4 @@
-import { AdvancedMatchingConfig, DbSchema, getExceptionMessage, Job, JobStatus, throwError } from '@first2apply/core';
+import { AdvancedMatchingConfig, DbSchema, getExceptionMessage, Job, JobStatus, throwError } from '@careeros/core';
 import { SupabaseClient } from '@supabase/supabasefork';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';

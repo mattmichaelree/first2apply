@@ -1,8 +1,8 @@
 import Markdown from 'react-markdown';
 
-import { Job } from '@first2apply/core';
-import { useSites } from '@first2apply/ui';
-import { Skeleton } from '@first2apply/ui';
+import { Job } from '@careeros/core';
+import { useSites } from '@careeros/ui';
+import { Skeleton } from '@careeros/ui';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 

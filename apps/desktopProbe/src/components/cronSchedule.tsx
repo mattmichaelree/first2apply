@@ -1,5 +1,5 @@
 import { AVAILABLE_CRON_RULES } from '@/lib/types';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@first2apply/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@careeros/ui';
 
 /**
  * Component used to set the cron schedule of the probe.

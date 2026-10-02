@@ -1,5 +1,5 @@
-import { DbSchema, Job, Link, WebPageRuntimeData } from '@first2apply/core';
-import { getExceptionMessage } from '@first2apply/core';
+import { DbSchema, Job, Link, WebPageRuntimeData } from '@careeros/core';
+import { getExceptionMessage } from '@careeros/core';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.48.1';
 
 import { CORS_HEADERS } from '../_shared/cors.ts';

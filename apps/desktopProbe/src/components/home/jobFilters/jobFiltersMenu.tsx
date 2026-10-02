@@ -2,9 +2,9 @@ import { FilterIcon } from 'lucide-react';
 import { useState } from 'react';
 
 import { LABEL_COLOR_CLASSES } from '@/lib/labels';
-import { JOB_LABELS } from '@first2apply/core';
-import { useSites } from '@first2apply/ui';
-import { useLinks } from '@first2apply/ui';
+import { JOB_LABELS } from '@careeros/core';
+import { useSites } from '@careeros/ui';
+import { useLinks } from '@careeros/ui';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -17,7 +17,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from '@first2apply/ui';
+} from '@careeros/ui';
 
 export type JobFiltersType = {
   sites: number[];

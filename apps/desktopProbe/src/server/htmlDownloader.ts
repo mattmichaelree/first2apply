@@ -1,4 +1,4 @@
-import { RateLimitError, WebPageRuntimeData, getExceptionMessage } from '@first2apply/core';
+import { RateLimitError, WebPageRuntimeData, getExceptionMessage } from '@careeros/core';
 import { BrowserWindow, Session } from 'electron';
 import { backOff } from 'exponential-backoff';
 

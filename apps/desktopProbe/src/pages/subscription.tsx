@@ -5,8 +5,8 @@ import { PricingOptions } from '@/components/pricingOptions';
 import { useError } from '@/hooks/error';
 import { useSession } from '@/hooks/session';
 import { openExternalUrl } from '@/lib/electronMainSdk';
-import { StripeBillingPlan, SubscriptionTier } from '@first2apply/core';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@first2apply/ui';
+import { StripeBillingPlan, SubscriptionTier } from '@careeros/core';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@careeros/ui';
 import urljoin from 'url-join';
 
 export function SubscriptionPage() {
@@ -95,7 +95,7 @@ export function SubscriptionPage() {
               <CardDescription></CardDescription>
             </CardHeader>
             <CardContent className="md:p-8 md:pt-2">
-              <p>We hope you landed your dream job with First 2 Apply.</p>
+              <p>We hope you landed your dream job with CareerOS.</p>
               <p className="mb-8">
                 Just in case you still need to use the app, you can renew your plan or switch to a different one.
               </p>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import type {
   UpsertUserFilterRuleInput,
   UserFilterRule,
-} from "@first2apply/core"
+} from "@careeros/core"
 
 import { useError } from "./useError"
 import { useIntelligenceSdk } from "./useIntelligenceSdk"

@@ -1,5 +1,5 @@
 import { OverlayBrowserViewResult } from '@/lib/types';
-import { WebPageRuntimeData } from '@first2apply/core';
+import { WebPageRuntimeData } from '@careeros/core';
 import { BrowserWindow, WebContentsView } from 'electron';
 
 import { getLinkedinReactContextBuilder } from './browserHelpers';
