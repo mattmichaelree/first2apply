@@ -226,6 +226,9 @@ async function bootstrap() {
       app.setAppUserModelId(ENV.appBundleId);
     }
 
+    const mainWindow = createMainWindow();
+    overlayBrowserView.setMainWindow(mainWindow);
+
     // track the app start event
     analytics.trackEvent('app_start');
 
@@ -304,12 +307,10 @@ async function bootstrap() {
       logger.info(`no session found on disk`);
     }
   } catch (error) {
-    logger.error(getExceptionMessage(error));
+    const message = getExceptionMessage(error);
+    logger.error(message);
+    dialog.showErrorBox('CareerOS failed to start', message);
   }
-
-  // create the main window after everything is setup
-  const mainWindow = createMainWindow();
-  overlayBrowserView.setMainWindow(mainWindow);
 
   // handle deep links on macOS and linux
   app.on('open-url', (event, url) => {
