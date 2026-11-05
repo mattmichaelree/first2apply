@@ -10,6 +10,7 @@ import path from 'path';
 
 import { AmplitudeAnalyticsClient } from './server/amplitude';
 import { CareerOsAutoUpdater } from './server/autoUpdater';
+import { isCareerOsWebNavigation, loadCareerOsWebHost } from './server/careerosWebHost';
 import { promiseAllSequence } from './server/helpers';
 import { HtmlDownloader } from './server/htmlDownloader';
 import { JobScanner } from './server/jobScanner';
@@ -30,6 +31,7 @@ if (require('electron-squirrel-startup')) {
 }
 
 const APP_PROTOCOL = 'careeros';
+const careerOsWebUrl = ENV.careerOsWebUrl;
 let appIsRunning = false;
 const storage = new Storage<{
   width: number;
@@ -47,6 +49,7 @@ if (process.defaultApp) {
 
 let mainWindow: BrowserWindow | null = null;
 let trayIconNotificationShown = false;
+
 const createMainWindow = () => {
   // Create the browser window.
   if (mainWindow) return;
@@ -56,19 +59,36 @@ const createMainWindow = () => {
     height: storage.get('height'),
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-      additionalArguments: [theme],
+      additionalArguments: [
+        `--careeros-theme=${theme}`,
+        `--careeros-bundled-url=${encodeURIComponent(MAIN_WINDOW_WEBPACK_ENTRY)}`,
+      ],
       partition: `persist:scraper`,
     },
     autoHideMenuBar: true,
   });
 
-  // and load the index.html of the app.
-  mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+  // Prefer a configured CareerOS web host, but leave the bundled renderer as a safe fallback.
+  void loadCareerOsWebHost({
+    webUrl: careerOsWebUrl,
+    bundledRendererUrl: MAIN_WINDOW_WEBPACK_ENTRY,
+    loadUrl: (url) => mainWindow?.loadURL(url) ?? Promise.resolve(),
+    onFailure: (error) => {
+      logger.error(`failed to load CareerOS web host; loading bundled renderer: ${getExceptionMessage(error)}`);
+    },
+  });
 
   if (ENV.nodeEnv === 'development') {
     // Open the DevTools.
     mainWindow.webContents.openDevTools();
   }
+
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      void shell.openExternal(url);
+    }
+    return { action: 'deny' };
+  });
 
   mainWindow.on('close', (event) => {
     event.preventDefault();
@@ -77,7 +97,7 @@ const createMainWindow = () => {
 
   // open all external links in the default browser
   mainWindow.webContents.on('will-navigate', (event, url) => {
-    if (url.startsWith('http') && !url.includes('main_window')) {
+    if (url.startsWith('http') && !url.includes('main_window') && !isCareerOsWebNavigation(url, careerOsWebUrl)) {
       event.preventDefault();
       shell.openExternal(url);
     }

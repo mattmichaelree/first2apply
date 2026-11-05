@@ -10,6 +10,7 @@
     "lint": "eslint --ext .ts,.tsx .",
     "typecheck": "tsc --noEmit",
     "build": "tsc --noEmit",
+    "test": "jest --config ./jest.config.ts --verbose",
     "prettier": "prettier --check \"src/**/*.{ts,tsx}\"",
     "package": "electron-forge package",
     "make": "electron-forge make --arch x64",
