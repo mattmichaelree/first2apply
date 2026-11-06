@@ -72,7 +72,9 @@ Startup logs are in `<careeros-jobs>\.runtime\api.out.log`, `api.err.log`, `web.
 
 ## Optional local provider credentials
 
-Open the tray menu and choose **Local provider credentials**. This dedicated local window supports Apify, Apollo, Crunchbase, Exa, Resend, and Gmail OAuth. Every saved field is encrypted through Electron `safeStorage` into a provider-specific binary file under Desktop's `userData\provider-credentials` directory. The window uses an ephemeral renderer partition, receives only configured/redacted status, and never writes credentials to browser storage, plain JSON, API responses, or logs.
+Open the tray menu and choose **Local provider credentials**. This dedicated local window supports Career Memory's private read-only gateway plus Apify, Apollo, Crunchbase, Exa, Resend, and Gmail OAuth. Every saved field is encrypted through Electron `safeStorage` into a provider-specific binary file under Desktop's `userData\provider-credentials` directory. The window uses an ephemeral renderer partition, receives only configured/redacted status, and never writes credentials to browser storage, plain JSON, API responses, or logs.
+
+For Career Memory, enter the private gateway URL (normally `https://career.mattos.xyz`) and its gateway username and password. Desktop supplies these only to the local CareerOS process. CareerOS requires HTTPS for this Basic-auth connection and keeps the integration read-only.
 
 Saving or removing a value does not contact the provider and does not enable provider execution. Restart the local CareerOS services so the Desktop launcher can supply only the configured provider environment variables to the new child process. Then open the CareerOS **Providers** workspace and use its explicit **Validate** action. Hosted CareerOS credentials remain deployment secrets; Desktop does not upload or manage them.
 

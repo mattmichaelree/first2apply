@@ -81,6 +81,31 @@ export const PROVIDER_CREDENTIAL_DEFINITIONS: readonly ProviderCredentialDefinit
     ],
   },
   {
+    id: 'career_memory',
+    label: 'Career Memory',
+    description: 'Private read-only role, bullet, achievement, and career-context sync.',
+    fields: [
+      {
+        id: 'origin',
+        label: 'Private gateway URL',
+        environmentVariable: 'CAREEROS_JOBS_CAREER_MEMORY_ORIGIN',
+        inputType: 'text',
+      },
+      {
+        id: 'username',
+        label: 'Gateway username',
+        environmentVariable: 'CAREEROS_JOBS_CAREER_MEMORY_USERNAME',
+        inputType: 'text',
+      },
+      {
+        id: 'password',
+        label: 'Gateway password',
+        environmentVariable: 'CAREEROS_JOBS_CAREER_MEMORY_PASSWORD',
+        inputType: 'password',
+      },
+    ],
+  },
+  {
     id: 'resend',
     label: 'Resend',
     description: 'Optional system notification delivery.',

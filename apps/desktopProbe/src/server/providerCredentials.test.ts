@@ -67,6 +67,32 @@ describe('local provider credential storage', () => {
     });
   });
 
+  it('stores the private Career Memory gateway as one redacted provider', () => {
+    const directory = createTemporaryDirectory();
+    const password = 'private-gateway-secret';
+    const store = new ProviderCredentialStore({
+      directory,
+      protectedStorage: createProtectedStorage(),
+    });
+
+    const overview = store.save('career_memory', {
+      origin: 'https://career.mattos.xyz',
+      username: 'career-gateway',
+      password,
+    });
+
+    expect(store.getEnvironment()).toEqual({
+      CAREEROS_JOBS_CAREER_MEMORY_ORIGIN: 'https://career.mattos.xyz',
+      CAREEROS_JOBS_CAREER_MEMORY_USERNAME: 'career-gateway',
+      CAREEROS_JOBS_CAREER_MEMORY_PASSWORD: password,
+    });
+    expect(JSON.stringify(overview)).not.toContain(password);
+    expect(overview.providers.find((provider) => provider.id === 'career_memory')).toMatchObject({
+      configured: true,
+      statusText: 'Configured (redacted)',
+    });
+  });
+
   it('replaces an existing encrypted value without retaining the previous secret', () => {
     const store = new ProviderCredentialStore({
       directory: createTemporaryDirectory(),
