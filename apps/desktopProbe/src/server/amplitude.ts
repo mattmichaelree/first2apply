@@ -1,4 +1,4 @@
-import { ENV } from '../env';
+import { ENV, isConfiguredValue } from '../env';
 
 import { IAnalyticsClient } from '@/lib/analytics';
 import * as amplitude from '@amplitude/analytics-node';
@@ -17,7 +17,7 @@ export class AmplitudeAnalyticsClient implements IAnalyticsClient {
    * Class constructor.
    */
   constructor() {
-    if (ENV.amplitudeApiKey) {
+    if (isConfiguredValue(ENV.amplitudeApiKey)) {
       amplitude.init(ENV.amplitudeApiKey, {
         flushIntervalMillis: 10000,
       });

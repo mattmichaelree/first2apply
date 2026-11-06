@@ -15,10 +15,22 @@ export function getCareerOsWebUrl(value = process.env.CAREEROS_WEB_URL) {
 
 export const DEFAULT_CAREEROS_WEB_URL = 'http://127.0.0.1:5174/';
 
+export function getCareerOsAutostart(value = process.env.CAREEROS_AUTOSTART) {
+  return !new Set(['0', 'false', 'no', 'off']).has(value?.trim().toLowerCase() ?? '');
+}
+
+export function isConfiguredValue(value: string | undefined) {
+  const normalized = value?.trim().toLowerCase();
+  return Boolean(normalized && !new Set(['disabled', 'none', 'null', 'undefined']).has(normalized));
+}
+
 export const ENV = {
   nodeEnv: process.env.NODE_ENV,
   appBundleId: process.env.APP_BUNDLE_ID,
+  careerOsAutostart: getCareerOsAutostart(),
+  careerOsJobsDirectory: process.env.CAREEROS_JOBS_DIR?.trim() || undefined,
   careerOsWebUrl: getCareerOsWebUrl(process.env.CAREEROS_WEB_URL ?? DEFAULT_CAREEROS_WEB_URL),
+  jobSweepChromeDirectory: process.env.JOB_SWEEP_CHROME_DIR?.trim() || undefined,
   supabase: {
     url: process.env.SUPABASE_URL,
     key: process.env.SUPABASE_KEY,

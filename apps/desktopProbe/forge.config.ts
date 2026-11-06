@@ -20,6 +20,7 @@ loadEnvVars({ path: path.join(__dirname, '..', 'desktopProbe', '.env') });
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    extraResource: [path.join(__dirname, '.generated', 'job-sweep')],
     icon: path.join(__dirname, 'packagers', 'icons', 'paper-plane'),
     appBundleId: process.env.APP_BUNDLE_ID,
     protocols: [
@@ -113,6 +114,14 @@ const config: ForgeConfig = {
             name: 'main_window',
             preload: {
               js: './src/preload.ts',
+            },
+          },
+          {
+            html: './src/providerSettings.html',
+            js: './src/providerSettingsRenderer.ts',
+            name: 'provider_settings_window',
+            preload: {
+              js: './src/providerSettingsPreload.ts',
             },
           },
         ],
