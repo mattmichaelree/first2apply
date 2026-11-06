@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { Skeleton } from '@first2apply/ui';
+import { Skeleton } from '@careeros/ui';
 
 export const CronScheduleSkeleton: FC = () => {
   return (

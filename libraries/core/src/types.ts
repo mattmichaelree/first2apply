@@ -1,3 +1,11 @@
+import type {
+  JobEnrichment,
+  JobFilterDecision,
+  JobScore,
+  UserFilterRule,
+  UserSearchProfile,
+} from './intelligence';
+
 export enum SiteProvider {
   linkedin = 'linkedin',
   glassdoor = 'glassdoor',
@@ -169,13 +177,13 @@ export type ProviderRuntimeData = LinkedinRuntimeData;
 export type DbSchema = {
   public: {
     Tables: {
-      sites: {
+      discovery_sites: {
         Row: JobSite;
         Insert: Pick<JobSite, 'name' | 'urls'>;
         Update: never;
         Relationships: [];
       };
-      links: {
+      discovery_links: {
         Row: Link;
         Insert: Pick<Link, 'url' | 'title' | 'site_id'>;
         Update: {
@@ -187,7 +195,7 @@ export type DbSchema = {
         };
         Relationships: [];
       };
-      jobs: {
+      discovery_jobs: {
         Row: Job;
         Insert: Pick<
           Job,
@@ -207,19 +215,19 @@ export type DbSchema = {
         Update: Pick<Job, 'status'> | Pick<Job, 'description'> | Pick<Job, 'labels'>;
         Relationships: [];
       };
-      reviews: {
+      discovery_reviews: {
         Row: Review;
         Insert: Pick<Review, 'title' | 'description' | 'rating'>;
         Update: Pick<Review, 'title' | 'description' | 'rating'>;
         Relationships: [];
       };
-      html_dumps: {
+      discovery_html_dumps: {
         Row: HtmlDump;
         Insert: Pick<HtmlDump, 'url' | 'html' | 'webpage_runtime_data'>;
         Update: never;
         Relationships: [];
       };
-      profiles: {
+      discovery_profiles: {
         Row: Profile;
         Insert: never;
         Update: Pick<
@@ -228,39 +236,165 @@ export type DbSchema = {
         >;
         Relationships: [];
       };
-      notes: {
+      discovery_notes: {
         Row: Note;
         Insert: Pick<Note, 'job_id' | 'text' | 'files'>;
         Update: Partial<Pick<Note, 'text' | 'files'>>;
         Relationships: [];
       };
-      advanced_matching: {
+      discovery_advanced_matching: {
         Row: AdvancedMatchingConfig;
         Insert: Pick<AdvancedMatchingConfig, 'blacklisted_companies' | 'chatgpt_prompt'>;
         Update: Partial<Pick<AdvancedMatchingConfig, 'blacklisted_companies' | 'chatgpt_prompt'>>;
         Relationships: [];
       };
+      user_search_profiles: {
+        Row: UserSearchProfile;
+        Insert: Pick<
+          UserSearchProfile,
+          | 'user_id'
+          | 'target_titles'
+          | 'target_skills'
+          | 'excluded_skills'
+          | 'salary_min'
+          | 'preferred_locations'
+          | 'remote_preferences'
+          | 'seniority_preferences'
+          | 'work_authorization'
+          | 'updated_at'
+        >;
+        Update: Partial<
+          Pick<
+            UserSearchProfile,
+            | 'target_titles'
+            | 'target_skills'
+            | 'excluded_skills'
+            | 'salary_min'
+            | 'preferred_locations'
+            | 'remote_preferences'
+            | 'seniority_preferences'
+            | 'work_authorization'
+            | 'updated_at'
+          >
+        >;
+        Relationships: [];
+      };
+      user_filter_rules: {
+        Row: UserFilterRule;
+        Insert: Pick<
+          UserFilterRule,
+          'user_id' | 'rule_type' | 'operator' | 'value_json' | 'enabled' | 'strictness' | 'updated_at'
+        >;
+        Update: Partial<
+          Pick<UserFilterRule, 'rule_type' | 'operator' | 'value_json' | 'enabled' | 'strictness' | 'updated_at'>
+        >;
+        Relationships: [];
+      };
+      job_enrichments: {
+        Row: JobEnrichment;
+        Insert: Pick<
+          JobEnrichment,
+          | 'job_id'
+          | 'normalized_title'
+          | 'normalized_company'
+          | 'normalized_location'
+          | 'remote_type'
+          | 'seniority_level'
+          | 'salary_normalized_min'
+          | 'salary_normalized_max'
+          | 'employment_type'
+          | 'required_skills'
+          | 'excluded_geographies'
+          | 'enrichment_version'
+        >;
+        Update: Partial<
+          Pick<
+            JobEnrichment,
+            | 'normalized_title'
+            | 'normalized_company'
+            | 'normalized_location'
+            | 'remote_type'
+            | 'seniority_level'
+            | 'salary_normalized_min'
+            | 'salary_normalized_max'
+            | 'employment_type'
+            | 'required_skills'
+            | 'excluded_geographies'
+            | 'enrichment_version'
+          >
+        >;
+        Relationships: [];
+      };
+      job_scores: {
+        Row: JobScore;
+        Insert: Pick<
+          JobScore,
+          | 'job_id'
+          | 'user_id'
+          | 'fit_score'
+          | 'urgency_score'
+          | 'quality_score'
+          | 'freshness_score'
+          | 'overall_score'
+          | 'score_version'
+        >;
+        Update: Partial<
+          Pick<
+            JobScore,
+            | 'fit_score'
+            | 'urgency_score'
+            | 'quality_score'
+            | 'freshness_score'
+            | 'overall_score'
+            | 'score_version'
+          >
+        >;
+        Relationships: [];
+      };
+      job_filter_decisions: {
+        Row: JobFilterDecision;
+        Insert: Pick<
+          JobFilterDecision,
+          | 'job_id'
+          | 'user_id'
+          | 'decision'
+          | 'reason_short'
+          | 'reason_long'
+          | 'evidence_json'
+          | 'mode'
+          | 'decision_version'
+        >;
+        Update: Partial<
+          Pick<
+            JobFilterDecision,
+            'decision' | 'reason_short' | 'reason_long' | 'evidence_json' | 'mode' | 'decision_version'
+          >
+        >;
+        Relationships: [];
+      };
     };
     Views: {};
     Functions: {
-      list_jobs: {
+      discovery_list_jobs: {
         Params: {
           jobs_status: JobStatus;
-          jobs_after: number | null;
+          jobs_after: string | null;
           jobs_page_size: number;
           jobs_search?: string;
           jobs_site_ids?: number[];
           jobs_link_ids?: number[];
+          jobs_labels?: string[];
         };
         Args: {};
         Returns: Job[];
       };
-      count_jobs: {
+      discovery_count_jobs: {
         Params: {
           jobs_status?: JobStatus;
           jobs_search?: string;
           jobs_site_ids?: number[];
           jobs_link_ids?: number[];
+          jobs_labels?: string[];
         };
         Args: {};
         Returns: Array<{
@@ -273,7 +407,7 @@ export type DbSchema = {
         Args: {};
         Returns: { id: string };
       };
-      count_chatgpt_usage: {
+      discovery_count_chatgpt_usage: {
         Params: {
           for_user_id: string;
           cost_increment: number;
@@ -282,6 +416,16 @@ export type DbSchema = {
         };
         Args: {};
         Returns: {};
+      };
+      discovery_log_ai_usage: {
+        Params: {
+          for_user_id: string;
+          cost_increment: number;
+          input_tokens_increment: number;
+          output_tokens_increment: number;
+        };
+        Args: {};
+        Returns: undefined;
       };
     };
   };

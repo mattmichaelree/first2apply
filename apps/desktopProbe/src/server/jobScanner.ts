@@ -1,7 +1,14 @@
 import { IAnalyticsClient } from '@/lib/analytics';
-import { getExceptionMessage, throwError } from '@first2apply/core';
-import { Job, Link } from '@first2apply/core';
-import { F2aSupabaseApi } from '@first2apply/ui';
+import {
+  SiteProvider,
+  getCronIntervalMs,
+  getExceptionMessage,
+  getScanJitterMs,
+  isScanDue,
+  throwError,
+} from '@careeros/core';
+import { Job, Link } from '@careeros/core';
+import { CareerOsSupabaseApi } from '@careeros/ui';
 import { Notification, app, powerSaveBlocker } from 'electron';
 import fs from 'fs';
 import { ScheduledTask, schedule } from 'node-cron';
@@ -12,12 +19,16 @@ import { installLinkedInDecorator } from './browserHelpers';
 import { chunk, promiseAllSequence, waitRandomBetween } from './helpers';
 import { HtmlDownloader } from './htmlDownloader';
 import { ILogger } from './logger';
+import { OpenRouterSettingsStore } from './openRouterSettings';
 
 const userDataPath = app.getPath('userData');
 const settingsPath = path.join(userDataPath, 'settings.json');
 
 const DEFAULT_SETTINGS: JobScannerSettings = {
   cronRule: AVAILABLE_CRON_RULES[1].value, // every 1h
+  siteCronRules: {
+    [SiteProvider.linkedin]: AVAILABLE_CRON_RULES[3].value,
+  },
   preventSleep: true,
   useSound: true,
   areEmailAlertsEnabled: true,
@@ -29,15 +40,17 @@ const DEFAULT_SETTINGS: JobScannerSettings = {
  */
 export class JobScanner {
   private _logger: ILogger;
-  private _supabaseApi: F2aSupabaseApi;
+  private _supabaseApi: CareerOsSupabaseApi;
   private _normalHtmlDownloader: HtmlDownloader;
   private _incognitoHtmlDownloader: HtmlDownloader;
   private _onNavigate: (_: { path: string }) => void;
   private _analytics: IAnalyticsClient;
+  private _openRouterSettings: OpenRouterSettingsStore;
 
   private _isRunning = true;
   // these defaults will be applied when migrating from older versions
   private _settings: JobScannerSettings = {
+    siteCronRules: {},
     preventSleep: false,
     useSound: false,
     areEmailAlertsEnabled: true,
@@ -55,13 +68,15 @@ export class JobScanner {
     incognitoHtmlDownloader,
     onNavigate,
     analytics,
+    openRouterSettings,
   }: {
     logger: ILogger;
-    supabaseApi: F2aSupabaseApi;
+    supabaseApi: CareerOsSupabaseApi;
     normalHtmlDownloader: HtmlDownloader;
     incognitoHtmlDownloader: HtmlDownloader;
     onNavigate: (_: { path: string }) => void;
     analytics: IAnalyticsClient;
+    openRouterSettings: OpenRouterSettingsStore;
   }) {
     this._logger = logger;
     this._supabaseApi = supabaseApi;
@@ -69,6 +84,7 @@ export class JobScanner {
     this._incognitoHtmlDownloader = incognitoHtmlDownloader;
     this._onNavigate = onNavigate;
     this._analytics = analytics;
+    this._openRouterSettings = openRouterSettings;
 
     // Install LinkedIn protocol interceptor on the normal scraper session.
     // This must happen after init() so the pool (and its session) exists.
@@ -81,9 +97,14 @@ export class JobScanner {
     // load the setings from disk
     let settingsToApply = this._settings;
     if (fs.existsSync(settingsPath)) {
+      const savedSettings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8')) as Partial<JobScannerSettings>;
       settingsToApply = {
-        ...this._settings,
-        ...JSON.parse(fs.readFileSync(settingsPath, 'utf-8')),
+        ...DEFAULT_SETTINGS,
+        ...savedSettings,
+        siteCronRules: {
+          ...DEFAULT_SETTINGS.siteCronRules,
+          ...savedSettings.siteCronRules,
+        },
       };
       this._logger.info(`loadied settings from disk: ${JSON.stringify(settingsToApply)}`);
     } else {
@@ -117,6 +138,35 @@ export class JobScanner {
 
     // start the scan
     return this.scanLinks({ links });
+  }
+
+  async scanDueLinks() {
+    if (this.isScanning()) {
+      this._logger.info('skipping scheduled scan because the scanner is processing other links');
+      return;
+    }
+
+    const [links, sites] = await Promise.all([this._supabaseApi.listLinks(), this._supabaseApi.listSites()]);
+    const providerBySiteId = new Map(sites.map((site) => [site.id, site.provider]));
+    const nowMs = Date.now();
+    const dueLinks = links.filter((link) => {
+      const provider = providerBySiteId.get(link.site_id);
+      if (!provider) return false;
+
+      const hasOverride = Object.hasOwn(this._settings.siteCronRules, provider);
+      const cronRule = hasOverride ? this._settings.siteCronRules[provider] : this._settings.cronRule;
+      const intervalMs = getCronIntervalMs(cronRule);
+      if (!intervalMs) return false;
+
+      const jitterMs =
+        provider === SiteProvider.linkedin
+          ? getScanJitterMs({ linkId: link.id, lastScrapedAt: link.last_scraped_at, maxJitterMinutes: 20 })
+          : 0;
+      return isScanDue({ lastScrapedAt: link.last_scraped_at, intervalMs, jitterMs, nowMs });
+    });
+
+    this._logger.info(`found ${dueLinks.length} scheduled links due for scanning`);
+    if (dueLinks.length > 0) return this.scanLinks({ links: dueLinks });
   }
 
   /**
@@ -270,6 +320,7 @@ export class JobScanner {
                     html,
                     maxRetries,
                     retryCount,
+                    openRouter: this._openRouterSettings.getRequestConfig(),
                   });
 
                   if (parseFailed) {
@@ -421,16 +472,21 @@ export class JobScanner {
    * Apply a new set of settings into the runtime.
    */
   private _applySettings(settings: JobScannerSettings) {
-    if (settings.cronRule !== this._settings.cronRule) {
+    const scheduleChanged =
+      settings.cronRule !== this._settings.cronRule ||
+      JSON.stringify(settings.siteCronRules) !== JSON.stringify(this._settings.siteCronRules);
+    if (scheduleChanged) {
       // stop old cron job
       if (this._cronJob) {
         this._logger.info(`stopping old cron schedule`);
         this._cronJob.stop();
       }
       // start new cron job if needed
-      if (settings.cronRule) {
-        this._cronJob = schedule(settings.cronRule, () => this.scanAllLinks());
-        this._logger.info(`cron job started successfully ${settings.cronRule}`);
+      const hasEnabledSchedule =
+        Boolean(settings.cronRule) || Object.values(settings.siteCronRules).some((cronRule) => Boolean(cronRule));
+      if (hasEnabledSchedule) {
+        this._cronJob = schedule('*/15 * * * *', () => this.scanDueLinks());
+        this._logger.info('scheduled eligibility check started successfully');
       }
     }
 

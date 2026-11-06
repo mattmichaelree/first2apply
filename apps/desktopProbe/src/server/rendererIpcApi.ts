@@ -1,14 +1,15 @@
-import { getExceptionMessage } from '@first2apply/core';
-import { Job } from '@first2apply/core';
-import { F2aSupabaseApi } from '@first2apply/ui';
+import { getExceptionMessage } from '@careeros/core';
+import { Job } from '@careeros/core';
+import { CareerOsSupabaseApi } from '@careeros/ui';
 import { dialog, ipcMain, shell } from 'electron';
 import fs from 'fs';
 import { json2csv } from 'json-2-csv';
 import os from 'os';
 
 import { IAnalyticsClient } from '../lib/analytics';
-import { F2aAutoUpdater } from './autoUpdater';
+import { CareerOsAutoUpdater } from './autoUpdater';
 import { JobScanner } from './jobScanner';
+import { OpenRouterSettingsStore } from './openRouterSettings';
 import { OverlayBrowserView } from './overlayBrowserView';
 import { getStripeConfig } from './stripeConfig';
 
@@ -34,13 +35,15 @@ export function initRendererIpcApi({
   jobScanner,
   autoUpdater,
   overlayBrowserView,
+  openRouterSettings,
   nodeEnv,
   analytics,
 }: {
-  supabaseApi: F2aSupabaseApi;
+  supabaseApi: CareerOsSupabaseApi;
   jobScanner: JobScanner;
-  autoUpdater: F2aAutoUpdater;
+  autoUpdater: CareerOsAutoUpdater;
   overlayBrowserView: OverlayBrowserView;
+  openRouterSettings: OpenRouterSettingsStore;
   nodeEnv: string;
   analytics: IAnalyticsClient;
 }) {
@@ -77,20 +80,34 @@ export function initRendererIpcApi({
 
   ipcMain.handle('get-user', async () => _apiCall(() => supabaseApi.getUser()));
 
-  ipcMain.handle('create-link', async (_, { title, url, html, webPageRuntimeData, force }) =>
+  ipcMain.handle('create-link', async (_, { title, url, html, webPageRuntimeData }) =>
     _apiCall(async () => {
-      const { link, newJobs } = await supabaseApi.createLink({
+      const { link } = await supabaseApi.createLink({
         title,
         url,
-        html,
-        webPageRuntimeData,
-        force,
       });
 
-      // intentionally not awaited to not have the user wait until JDs are in
-      jobScanner.scanJobs(newJobs).catch((error) => {
-        console.error(getExceptionMessage(error));
-      });
+      supabaseApi
+        .scanHtmls([
+          {
+            linkId: link.id,
+            content: html,
+            webPageRuntimeData,
+            maxRetries: 0,
+            retryCount: 0,
+          },
+        ])
+        .then(({ newJobs, parseFailed }): Promise<Job[]> | Job[] => {
+          if (parseFailed) {
+            console.error(`Failed to detect jobs for saved search ${link.id}`);
+            return [];
+          }
+
+          return jobScanner.scanJobs(newJobs);
+        })
+        .catch((error) => {
+          console.error(`Failed to scan saved search ${link.id}: ${getExceptionMessage(error)}`);
+        });
 
       analytics.trackEvent('link_created', { link_id: link.id, user_id: link.user_id, site_id: link.site_id });
 
@@ -264,6 +281,14 @@ export function initRendererIpcApi({
   });
 
   ipcMain.handle('get-advanced-matching-config', async () => _apiCall(() => supabaseApi.getAdvancedMatchingConfig()));
+
+  ipcMain.handle('get-openrouter-settings', async () => _apiCall(async () => openRouterSettings.getStatus()));
+
+  ipcMain.handle('save-openrouter-settings', async (event, { apiKey, model }) =>
+    _apiCall(async () => openRouterSettings.save({ apiKey, model })),
+  );
+
+  ipcMain.handle('remove-openrouter-settings', async () => _apiCall(async () => openRouterSettings.remove()));
 
   ipcMain.handle('update-advanced-matching-config', async (event, { config }) => {
     const res = _apiCall(() => supabaseApi.updateAdvancedMatchingConfig(config));

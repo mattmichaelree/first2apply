@@ -1,4 +1,4 @@
-import { SiteProvider, WebPageRuntimeData } from '@first2apply/core';
+import { SiteProvider, WebPageRuntimeData } from '@careeros/core';
 import { createHash } from 'crypto';
 import { Session } from 'electron';
 
@@ -147,7 +147,7 @@ export function getLinkedinReactContextBuilder(): string {
         value: stringifiedValue,
       };
     });
-    el.setAttribute('f2a-react-context', JSON.stringify(reactContext))
+    el.setAttribute('careeros-react-context', JSON.stringify(reactContext))
   });
 `;
 }

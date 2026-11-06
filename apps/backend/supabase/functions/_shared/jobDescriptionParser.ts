@@ -1,4 +1,4 @@
-import { DbSchema, Job, JobSite, SiteProvider, User } from '@first2apply/core';
+import { DbSchema, Job, JobSite, SiteProvider, User } from '@careeros/core';
 import { SupabaseClient } from '@supabase/supabasefork';
 import { DOMParser, Element } from 'https://deno.land/x/deno_dom@v0.1.43/deno-dom-wasm.ts';
 import turndown from 'turndown';

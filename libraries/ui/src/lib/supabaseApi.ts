@@ -2,11 +2,23 @@ import {
   AdvancedMatchingConfig,
   DbSchema,
   Job,
+  JobEnrichment,
+  JobExplanation,
+  JobFilterDecision,
   JobLabel,
+  JobScore,
   JobStatus,
   Link,
+  OpenRouterRequestConfig,
   WebPageRuntimeData,
-} from "@first2apply/core"
+  ListRankedJobsParams,
+  ListRankedJobsResult,
+  RankedJobRecord,
+  UpsertUserFilterRuleInput,
+  UpsertUserSearchProfileInput,
+  UserFilterRule,
+  UserSearchProfile,
+} from "@careeros/core"
 import {
   FunctionsHttpError,
   PostgrestError,
@@ -20,7 +32,7 @@ import * as luxon from "luxon"
 /**
  * Class used to interact with our Supabase API.
  */
-export class F2aSupabaseApi {
+export class CareerOsSupabaseApi {
   constructor(private _supabase: SupabaseClient<DbSchema>) {}
 
   /**
@@ -63,7 +75,7 @@ export class F2aSupabaseApi {
   sendPasswordResetEmail({ email }: { email: string }) {
     return this._supabaseApiCall(() =>
       this._supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: "first2apply://reset-password",
+        redirectTo: "careeros://reset-password",
       })
     )
   }
@@ -101,23 +113,7 @@ export class F2aSupabaseApi {
   /**
    * Create a new link.
    */
-  async createLink({
-    title,
-    url,
-    html,
-    webPageRuntimeData,
-    force,
-  }: {
-    title: string
-    url: string
-    html: string
-    webPageRuntimeData: WebPageRuntimeData
-    force: boolean
-  }) {
-    // for debugging, use a test.html file
-    // const htmlFixture = fs.readFileSync(path.join(__dirname, '../../../test.html'), 'utf-8');
-    // html = htmlFixture;
-
+  async createLink({ title, url }: { title: string; url: string }) {
     const { link, newJobs } = await this._supabaseApiCall(() =>
       this._supabase.functions.invoke<{ link: Link; newJobs: Job[] }>(
         "create-link",
@@ -125,9 +121,6 @@ export class F2aSupabaseApi {
           body: {
             title,
             url,
-            html,
-            webPageRuntimeData,
-            force,
           },
         }
       )
@@ -150,7 +143,7 @@ export class F2aSupabaseApi {
   }): Promise<Link> {
     const updatedLink = await this._supabaseApiCall(async () =>
       this._supabase
-        .from("links")
+        .from("discovery_links")
         .update({ title, url })
         .eq("id", linkId)
         .select("*")
@@ -165,7 +158,10 @@ export class F2aSupabaseApi {
    */
   listLinks(): Promise<Link[]> {
     return this._supabaseApiCall(async () =>
-      this._supabase.from("links").select("*").order("id", { ascending: false })
+      this._supabase
+        .from("discovery_links")
+        .select("*")
+        .order("id", { ascending: false })
     )
   }
 
@@ -174,7 +170,7 @@ export class F2aSupabaseApi {
    */
   deleteLink(linkId: number) {
     return this._supabaseApiCall(async () =>
-      this._supabase.from("links").delete().eq("id", linkId)
+      this._supabase.from("discovery_links").delete().eq("id", linkId)
     )
   }
 
@@ -210,11 +206,13 @@ export class F2aSupabaseApi {
     html,
     maxRetries,
     retryCount,
+    openRouter,
   }: {
     jobId: number
     html: string
     maxRetries: number
     retryCount: number
+    openRouter?: OpenRouterRequestConfig
   }) {
     return this._supabaseApiCall(() =>
       this._supabase.functions.invoke<{ job: Job; parseFailed: boolean }>(
@@ -225,6 +223,7 @@ export class F2aSupabaseApi {
             html,
             maxRetries,
             retryCount,
+            openRouter,
           },
         }
       )
@@ -277,7 +276,7 @@ export class F2aSupabaseApi {
     const jobs_labels = labels && labels.length > 0 ? labels : undefined
     const [jobs, counters] = await Promise.all([
       this._supabaseApiCall<Job[], PostgrestError>(async () => {
-        const res = await this._supabase.rpc("list_jobs", {
+        const res = await this._supabase.rpc("discovery_list_jobs", {
           jobs_status: status,
           jobs_after: after ?? null,
           jobs_page_size: limit,
@@ -296,7 +295,7 @@ export class F2aSupabaseApi {
         }>,
         PostgrestError
       >(async () => {
-        const res = await this._supabase.rpc("count_jobs", {
+        const res = await this._supabase.rpc("discovery_count_jobs", {
           jobs_search,
           jobs_site_ids,
           jobs_link_ids,
@@ -332,7 +331,7 @@ export class F2aSupabaseApi {
     return this._supabaseApiCall(
       async () =>
         await this._supabase
-          .from("jobs")
+          .from("discovery_jobs")
           .update({
             status,
             updated_at: luxon.DateTime.now().toUTC().toJSDate(),
@@ -355,7 +354,7 @@ export class F2aSupabaseApi {
     const [updatedJob] = await this._supabaseApiCall(
       async () =>
         await this._supabase
-          .from("jobs")
+          .from("discovery_jobs")
           .update({
             labels,
           })
@@ -371,7 +370,7 @@ export class F2aSupabaseApi {
    */
   listSites() {
     return this._supabaseApiCall(
-      async () => await this._supabase.from("sites").select("*")
+      async () => await this._supabase.from("discovery_sites").select("*")
     )
   }
 
@@ -380,7 +379,7 @@ export class F2aSupabaseApi {
    */
   async getJob(jobId: number) {
     const [job] = await this._supabaseApiCall(async () =>
-      this._supabase.from("jobs").select("*").eq("id", jobId)
+      this._supabase.from("discovery_jobs").select("*").eq("id", jobId)
     )
     return job
   }
@@ -391,7 +390,7 @@ export class F2aSupabaseApi {
   async changeAllJobStatus({ from, to }: { from: JobStatus; to: JobStatus }) {
     return this._supabaseApiCall(async () =>
       this._supabase
-        .from("jobs")
+        .from("discovery_jobs")
         .update({
           status: to,
           updated_at: luxon.DateTime.now().toUTC().toJSDate(),
@@ -455,7 +454,7 @@ export class F2aSupabaseApi {
     const [createdReview] = await this._supabaseApiCall(
       async () =>
         await this._supabase
-          .from("reviews")
+          .from("discovery_reviews")
           .insert({
             title: title.trim(),
             description: description?.trim(),
@@ -472,7 +471,7 @@ export class F2aSupabaseApi {
    */
   async getUserReview() {
     const [review] = await this._supabaseApiCall(
-      async () => await this._supabase.from("reviews").select("*")
+      async () => await this._supabase.from("discovery_reviews").select("*")
     )
 
     return review
@@ -495,7 +494,7 @@ export class F2aSupabaseApi {
     const [updatedReview] = await this._supabaseApiCall(
       async () =>
         await this._supabase
-          .from("reviews")
+          .from("discovery_reviews")
           .update({
             title: title.trim(),
             description: description?.trim(),
@@ -513,7 +512,7 @@ export class F2aSupabaseApi {
    */
   async getProfile() {
     const [profile] = await this._supabaseApiCall(
-      async () => await this._supabase.from("profiles").select("*")
+      async () => await this._supabase.from("discovery_profiles").select("*")
     )
 
     return profile
@@ -534,7 +533,7 @@ export class F2aSupabaseApi {
     const [createdNote] = await this._supabaseApiCall(
       async () =>
         await this._supabase
-          .from("notes")
+          .from("discovery_notes")
           .insert({ job_id, text, files })
           .select("*")
     )
@@ -548,7 +547,7 @@ export class F2aSupabaseApi {
   async listNotes(job_id: number) {
     return this._supabaseApiCall(async () =>
       this._supabase
-        .from("notes")
+        .from("discovery_notes")
         .select("*")
         .eq("job_id", job_id)
         .order("created_at", { ascending: false })
@@ -561,7 +560,7 @@ export class F2aSupabaseApi {
   async updateNote({ noteId, text }: { noteId: number; text: string }) {
     return this._supabaseApiCall(async () =>
       this._supabase
-        .from("notes")
+        .from("discovery_notes")
         .update({ text })
         .eq("id", noteId)
         .select("*")
@@ -574,7 +573,7 @@ export class F2aSupabaseApi {
    */
   async addFileToNote({ noteId, file }: { noteId: number; file: string }) {
     const result = await this._supabase
-      .from("notes")
+      .from("discovery_notes")
       .select("files")
       .eq("id", noteId)
       .single()
@@ -589,7 +588,7 @@ export class F2aSupabaseApi {
 
     return this._supabaseApiCall(async () =>
       this._supabase
-        .from("notes")
+        .from("discovery_notes")
         .update({ files: updatedFiles })
         .eq("id", noteId)
         .single()
@@ -601,7 +600,7 @@ export class F2aSupabaseApi {
    */
   async deleteNote(noteId: number) {
     return this._supabaseApiCall(async () =>
-      this._supabase.from("notes").delete().eq("id", noteId)
+      this._supabase.from("discovery_notes").delete().eq("id", noteId)
     )
   }
 
@@ -610,7 +609,8 @@ export class F2aSupabaseApi {
    */
   async getAdvancedMatchingConfig() {
     const [config] = await this._supabaseApiCall(
-      async () => await this._supabase.from("advanced_matching").select("*")
+      async () =>
+        await this._supabase.from("discovery_advanced_matching").select("*")
     )
 
     return config
@@ -628,7 +628,7 @@ export class F2aSupabaseApi {
     const [updatedConfig] = await this._supabaseApiCall(
       async () =>
         await this._supabase
-          .from("advanced_matching")
+          .from("discovery_advanced_matching")
           .upsert(config, {
             onConflict: "user_id",
           })
@@ -650,9 +650,381 @@ export class F2aSupabaseApi {
   }) {
     await this._supabaseApiCall(async () =>
       this._supabase
-        .from("links")
+        .from("discovery_links")
         .update({ scrape_failure_count: failures })
         .eq("id", linkId)
     )
+  }
+
+  /**
+   * Get the current user's search profile for the intelligence layer.
+   */
+  async getUserSearchProfile() {
+    return this._supabaseApiCall(async () =>
+      this._supabase.from("user_search_profiles").select("*").maybeSingle()
+    ) as Promise<UserSearchProfile | null>
+  }
+
+  /**
+   * Create or update the current user's search profile.
+   */
+  async upsertUserSearchProfile(
+    input: UpsertUserSearchProfileInput
+  ): Promise<UserSearchProfile> {
+    const userId = await this._requireCurrentUserId()
+    const sharedProfileFields = {
+      target_titles: input.target_titles,
+      target_skills: input.target_skills ?? [],
+      excluded_skills: input.excluded_skills ?? [],
+      salary_min: input.salary_min,
+      preferred_locations: input.preferred_locations ?? [],
+      remote_preferences: input.remote_preferences ?? [],
+      seniority_preferences: input.seniority_preferences ?? [],
+      work_authorization: input.work_authorization,
+      updated_at: luxon.DateTime.now().toUTC().toJSDate(),
+    }
+    const insertPayload = {
+      user_id: userId,
+      ...sharedProfileFields,
+    }
+
+    const existingProfile = await this.getUserSearchProfile()
+    const profile = existingProfile
+      ? await this._supabaseApiCall(async () =>
+          this._supabase
+            .from("user_search_profiles")
+            .update(sharedProfileFields)
+            .eq("user_id", userId)
+            .select("*")
+            .single()
+        )
+      : await this._supabaseApiCall(async () =>
+          this._supabase
+            .from("user_search_profiles")
+            .insert(insertPayload)
+            .select("*")
+            .single()
+        )
+
+    if (!profile) {
+      throw new Error("Failed to upsert user search profile")
+    }
+
+    return profile
+  }
+
+  /**
+   * List all saved user filter rules for the current user.
+   */
+  async listUserFilterRules(): Promise<UserFilterRule[]> {
+    return this._supabaseApiCall(async () =>
+      this._supabase
+        .from("user_filter_rules")
+        .select("*")
+        .order("id", { ascending: true })
+    )
+  }
+
+  /**
+   * Create or update a filter rule for the current user.
+   */
+  async upsertUserFilterRule(
+    input: UpsertUserFilterRuleInput
+  ): Promise<UserFilterRule> {
+    const userId = await this._requireCurrentUserId()
+    const now = luxon.DateTime.now().toUTC().toJSDate()
+
+    const sharedRuleFields = {
+      rule_type: input.rule_type,
+      operator: input.operator,
+      value_json: input.value_json,
+      enabled: input.enabled ?? true,
+      strictness: input.strictness ?? "balanced",
+      updated_at: now,
+    }
+    const insertPayload = {
+      user_id: userId,
+      ...sharedRuleFields,
+    }
+
+    let rule: UserFilterRule | null
+    if (typeof input.id === "number") {
+      const ruleId = input.id
+      rule = await this._supabaseApiCall(async () =>
+        this._supabase
+          .from("user_filter_rules")
+          .update(sharedRuleFields)
+          .eq("id", ruleId)
+          .eq("user_id", userId)
+          .select("*")
+          .single()
+      )
+    } else {
+      rule = await this._supabaseApiCall(async () =>
+        this._supabase
+          .from("user_filter_rules")
+          .insert(insertPayload)
+          .select("*")
+          .single()
+      )
+    }
+
+    if (!rule) {
+      throw new Error("Failed to upsert user filter rule")
+    }
+
+    return rule
+  }
+
+  /**
+   * Delete a user filter rule by ID.
+   */
+  async deleteUserFilterRule(ruleId: number): Promise<void> {
+    await this._supabaseApiCall(async () =>
+      this._supabase.from("user_filter_rules").delete().eq("id", ruleId)
+    )
+  }
+
+  /**
+   * Fetch the intelligence snapshot for a specific job.
+   */
+  async getJobIntelligence(jobId: number) {
+    const userId = await this._requireCurrentUserId()
+    const [enrichment, score, filterDecision] = await Promise.all([
+      this._supabaseApiCall(async () =>
+        this._supabase
+          .from("job_enrichments")
+          .select("*")
+          .eq("job_id", jobId)
+          .maybeSingle()
+      ) as Promise<JobEnrichment | null>,
+      this._supabaseApiCall(async () =>
+        this._supabase
+          .from("job_scores")
+          .select("*")
+          .eq("job_id", jobId)
+          .eq("user_id", userId)
+          .maybeSingle()
+      ) as Promise<JobScore | null>,
+      this._supabaseApiCall(async () =>
+        this._supabase
+          .from("job_filter_decisions")
+          .select("*")
+          .eq("job_id", jobId)
+          .eq("user_id", userId)
+          .order("id", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      ) as Promise<JobFilterDecision | null>,
+    ])
+
+    return {
+      jobId,
+      enrichment,
+      score,
+      filterDecision,
+      explanation: this._buildJobExplanation({
+        enrichment,
+        score,
+        filterDecision,
+      }),
+    }
+  }
+
+  /**
+   * Return jobs plus any available intelligence records.
+   *
+   * This is intentionally transitional: it starts from inherited listJobs
+   * and layers intelligence records on top until a dedicated ranked query exists.
+   */
+  async listRankedJobs({
+    status = "new",
+    search,
+    limit = 50,
+    after,
+    strictness = "balanced",
+    includeFiltered = false,
+  }: ListRankedJobsParams): Promise<ListRankedJobsResult> {
+    const base = await this.listJobs({
+      status,
+      search,
+      limit,
+      after,
+    })
+
+    const jobIds = base.jobs.map((job) => job.id)
+    if (jobIds.length === 0) {
+      return { jobs: [], nextPageToken: base.nextPageToken }
+    }
+
+    const userId = await this._requireCurrentUserId()
+    const [enrichments, scores, filterDecisions] = await Promise.all([
+      this._supabaseApiCall(async () =>
+        this._supabase.from("job_enrichments").select("*").in("job_id", jobIds)
+      ) as Promise<JobEnrichment[]>,
+      this._supabaseApiCall(async () =>
+        this._supabase
+          .from("job_scores")
+          .select("*")
+          .eq("user_id", userId)
+          .in("job_id", jobIds)
+      ) as Promise<JobScore[]>,
+      this._supabaseApiCall(async () =>
+        this._supabase
+          .from("job_filter_decisions")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("mode", strictness)
+          .in("job_id", jobIds)
+          .order("id", { ascending: false })
+      ) as Promise<JobFilterDecision[]>,
+    ])
+
+    const enrichmentMap = new Map(enrichments.map((row) => [row.job_id, row]))
+    const scoreMap = new Map(scores.map((row) => [row.job_id, row]))
+    const decisionMap = new Map<number, JobFilterDecision>()
+    for (const row of filterDecisions) {
+      if (!decisionMap.has(row.job_id)) {
+        decisionMap.set(row.job_id, row)
+      }
+    }
+
+    const records: RankedJobRecord[] = base.jobs.map((job) => {
+      const enrichment = enrichmentMap.get(job.id) ?? null
+      const score = scoreMap.get(job.id) ?? null
+      const filterDecision = decisionMap.get(job.id) ?? null
+
+      return {
+        job,
+        enrichment,
+        score,
+        filterDecision,
+        explanation: this._buildJobExplanation({
+          enrichment,
+          score,
+          filterDecision,
+        }),
+      }
+    })
+
+    const visibleRecords = includeFiltered
+      ? records
+      : records.filter((record) => {
+          const decision = record.filterDecision?.decision?.toLowerCase()
+          return (
+            decision !== "hide" &&
+            decision !== "hidden" &&
+            decision !== "exclude"
+          )
+        })
+
+    visibleRecords.sort((a, b) => {
+      const left = a.score?.overall_score ?? Number.NEGATIVE_INFINITY
+      const right = b.score?.overall_score ?? Number.NEGATIVE_INFINITY
+      return right - left
+    })
+
+    return {
+      jobs: visibleRecords,
+      nextPageToken: base.nextPageToken,
+    }
+  }
+
+  private _buildJobExplanation({
+    enrichment,
+    score,
+    filterDecision,
+  }: {
+    enrichment?: JobEnrichment | null
+    score?: JobScore | null
+    filterDecision?: JobFilterDecision | null
+  }): JobExplanation | null {
+    if (!enrichment && !score && !filterDecision) {
+      return null
+    }
+
+    const fit_reasons: string[] = []
+    const concerns: string[] = []
+    const filter_reasons: string[] = []
+    const evidence: JobExplanation["evidence"] = []
+
+    if (typeof score?.overall_score === "number") {
+      fit_reasons.push(`Overall score: ${score.overall_score.toFixed(2)}`)
+      evidence.push({
+        label: "overall_score",
+        value: score.overall_score.toFixed(2),
+        source: "inferred",
+      })
+    }
+
+    if (typeof score?.fit_score === "number") {
+      evidence.push({
+        label: "fit_score",
+        value: score.fit_score.toFixed(2),
+        source: "inferred",
+      })
+    }
+
+    if (enrichment?.normalized_title) {
+      evidence.push({
+        label: "normalized_title",
+        value: enrichment.normalized_title,
+        source: "inferred",
+      })
+    }
+
+    if (enrichment?.required_skills?.length) {
+      fit_reasons.push(
+        `Required skills detected: ${enrichment.required_skills.slice(0, 5).join(", ")}`
+      )
+    }
+
+    if (filterDecision?.reason_short) {
+      filter_reasons.push(filterDecision.reason_short)
+    }
+
+    if (filterDecision?.reason_long) {
+      concerns.push(filterDecision.reason_long)
+    }
+
+    if (filterDecision?.evidence_json) {
+      for (const [label, value] of Object.entries(
+        filterDecision.evidence_json
+      )) {
+        evidence.push({
+          label,
+          value: typeof value === "string" ? value : JSON.stringify(value),
+          source: "user_rule",
+        })
+      }
+    }
+
+    return {
+      summary: filterDecision?.reason_short ?? undefined,
+      fit_reasons,
+      concerns,
+      filter_reasons,
+      evidence,
+      mode: filterDecision?.mode ?? "balanced",
+      versions: {
+        enrichment: enrichment?.enrichment_version,
+        score: score?.score_version,
+        decision: filterDecision?.decision_version,
+      },
+    }
+  }
+
+  private async _getCurrentUserId(): Promise<string | null> {
+    const { data, error } = await this._supabase.auth.getUser()
+    if (error) throw error
+    return data.user?.id ?? null
+  }
+
+  private async _requireCurrentUserId(): Promise<string> {
+    const userId = await this._getCurrentUserId()
+    if (!userId) {
+      throw new Error("No authenticated user found")
+    }
+    return userId
   }
 }

@@ -14,9 +14,9 @@ import {
   updateJobLabels,
   updateJobStatus,
 } from '@/lib/electronMainSdk';
-import { Job, JobLabel, JobStatus } from '@first2apply/core';
-import { JobSummary, TabsContent } from '@first2apply/ui';
-import { toast } from '@first2apply/ui';
+import { Job, JobLabel, JobStatus } from '@careeros/core';
+import { JobSummary, TabsContent } from '@careeros/ui';
+import { toast } from '@careeros/ui';
 
 import { BrowserWindow, BrowserWindowHandle } from '../browserWindow';
 import { JobDetails } from './jobDetails';
@@ -106,6 +106,7 @@ export function JobTabsContent({
         }
       } catch (error) {
         handleError({ error, title: 'Failed to load jobs' });
+        setListing((listing) => ({ ...listing, isLoading: false }));
       }
     };
     asyncLoad();

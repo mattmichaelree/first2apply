@@ -1,6 +1,6 @@
 import {
   AdvancedMatchingConfig,
-  First2ApplyApiSdk,
+  CareerOsApiSdk,
   Job,
   JobLabel,
   JobSite,
@@ -9,11 +9,13 @@ import {
   ListJobsParams,
   ListJobsResult,
   Note,
+  OpenRouterModel,
+  OpenRouterSettingsStatus,
   Profile,
   Review,
   StripeConfig,
   WebPageRuntimeData,
-} from '@first2apply/core';
+} from '@careeros/core';
 import { User } from '@supabase/supabase-js';
 
 import { JobScannerSettings, NewAppVersion, OverlayBrowserViewResult } from './types';
@@ -392,6 +394,24 @@ export async function getAdvancedMatchingConfig(): Promise<AdvancedMatchingConfi
   return await _mainProcessApiCall('get-advanced-matching-config', {});
 }
 
+export async function getOpenRouterSettings(): Promise<OpenRouterSettingsStatus> {
+  return await _mainProcessApiCall('get-openrouter-settings', {});
+}
+
+export async function saveOpenRouterSettings({
+  apiKey,
+  model,
+}: {
+  apiKey?: string;
+  model: OpenRouterModel;
+}): Promise<OpenRouterSettingsStatus> {
+  return await _mainProcessApiCall('save-openrouter-settings', { apiKey, model });
+}
+
+export async function removeOpenRouterSettings(): Promise<OpenRouterSettingsStatus> {
+  return await _mainProcessApiCall('remove-openrouter-settings', {});
+}
+
 /**
  * Update the advanced matching configuration for the current user.
  */
@@ -485,9 +505,9 @@ export async function overlayBrowserViewNavigate(url: string): Promise<void> {
 }
 
 /**
- * Electron IPC implementation of the First2Apply API SDK.
+ * Electron IPC implementation of the CareerOS API SDK.
  */
-export class ElectronApiSdk implements First2ApplyApiSdk {
+export class ElectronApiSdk implements CareerOsApiSdk {
   // Auth
   getUser = getUser;
   loginWithEmail = loginWithEmail;

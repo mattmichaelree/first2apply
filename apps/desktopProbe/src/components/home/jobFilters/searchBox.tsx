@@ -1,6 +1,6 @@
 import { Cross2Icon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
 
-import { Input } from '@first2apply/ui';
+import { Input } from '@careeros/ui';
 
 /**
  * Search box component.

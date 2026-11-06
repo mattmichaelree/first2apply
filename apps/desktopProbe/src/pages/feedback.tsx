@@ -1,16 +1,16 @@
 import { Item } from '@radix-ui/react-radio-group';
 import { useEffect, useState } from 'react';
 
-import { Review } from '@first2apply/core';
-import { useForm } from '@first2apply/ui';
-import { Card, CardContent, CardHeader } from '@first2apply/ui';
-import { RadioGroup } from '@first2apply/ui';
-import { Button } from '@first2apply/ui';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@first2apply/ui';
-import { Input } from '@first2apply/ui';
-import { Skeleton } from '@first2apply/ui';
-import { Textarea } from '@first2apply/ui';
-import { toast } from '@first2apply/ui';
+import { Review } from '@careeros/core';
+import { useForm } from '@careeros/ui';
+import { Card, CardContent, CardHeader } from '@careeros/ui';
+import { RadioGroup } from '@careeros/ui';
+import { Button } from '@careeros/ui';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@careeros/ui';
+import { Input } from '@careeros/ui';
+import { Skeleton } from '@careeros/ui';
+import { Textarea } from '@careeros/ui';
+import { toast } from '@careeros/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
@@ -78,9 +78,10 @@ export function FeedbackPage() {
         // load user's OS
         const userOS = await getOS();
         setUserOS(userOS);
-        setIsLoading(false);
       } catch (error) {
         handleError({ error });
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -113,7 +114,7 @@ export function FeedbackPage() {
       setExistingReview(updatedReview);
 
       toast({
-        title: 'Thank you for making First 2 Apply better!',
+        title: 'Thank you for making CareerOS better!',
         description:
           'Your feedback has been submitted and our team will review it soon. You can always update your review later.',
         variant: 'success',
@@ -146,14 +147,14 @@ export function FeedbackPage() {
 
       <Card className="rounded-lg">
         <CardHeader>
-          <h2 className="text-xl font-medium">Help us make First 2 Apply better</h2>
+          <h2 className="text-xl font-medium">Help us make CareerOS better</h2>
           <p className="text-balance text-sm text-muted-foreground">
             Let us know what works, what doesn't or any ideas you might have that would make the app better suited to
             your job hunting needs.
           </p>
           {userOS === 'win32' && (
             <p className="my-2 text-balance text-sm text-muted-foreground">
-              If you're enjoying First 2 Apply, please consider leaving a review on the{' '}
+              If you're enjoying CareerOS, please consider leaving a review on the{' '}
               <a
                 className="hover:text-primary-dark text-primary underline hover:cursor-pointer hover:no-underline"
                 onClick={(e) => {

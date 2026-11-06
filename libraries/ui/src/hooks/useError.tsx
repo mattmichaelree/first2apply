@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 
-import { getExceptionMessage } from "@first2apply/core"
+import { getExceptionMessage } from "@careeros/core"
 
 import { useToast } from "./useToast"
 

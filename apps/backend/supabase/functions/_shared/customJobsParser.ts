@@ -1,5 +1,5 @@
-import { Job, throwError } from '@first2apply/core';
-import { DbSchema, User } from '@first2apply/core';
+import { Job, throwError } from '@careeros/core';
+import { DbSchema, User } from '@careeros/core';
 import { SupabaseClient } from '@supabase/supabasefork';
 import { DOMParser, Element } from 'deno-dom-wasm';
 import { zodResponseFormat } from 'openai/helpers/zod';
@@ -222,7 +222,7 @@ export async function parseCustomJobDescription({
   if (!document) throw new Error('Could not parse html');
 
   const { data: advancedMatchingRecord, error: getAdvancedMatchingRecordError } = await context.supabaseAdminClient
-    .from('advanced_matching')
+    .from('discovery_advanced_matching')
     .select('*')
     .eq('user_id', user.id)
     .maybeSingle();

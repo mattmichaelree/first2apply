@@ -1,6 +1,6 @@
-import { JobSite, WebPageRuntimeData } from '@first2apply/core';
-import { throwError } from '@first2apply/core';
-import { DbSchema, JobType, Link, SiteProvider, User } from '@first2apply/core';
+import { JobSite, WebPageRuntimeData } from '@careeros/core';
+import { throwError } from '@careeros/core';
+import { DbSchema, JobType, Link, SiteProvider, User } from '@careeros/core';
 import { SupabaseClient } from '@supabase/supabasefork';
 import { DOMParser, Element } from 'deno-dom-wasm';
 import { encodeHex } from 'jsr:@std/encoding/hex';
@@ -9,6 +9,7 @@ import turndown from 'turndown';
 import { parseCustomJobs } from './customJobsParser.ts';
 import { EdgeFunctionAuthorizedContext } from './edgeFunctions.ts';
 import { ILogger } from './logger.ts';
+import { parseBuiltinJobs as parseCurrentBuiltinJobs } from './parsers/builtin.ts';
 import { parseDiceJobs } from './parsers/dice.ts';
 import { parseHiringCafeJobs } from './parsers/hiringCafe.ts';
 import { parseLinkedInJobs } from './parsers/linkedin.ts';
@@ -221,7 +222,7 @@ async function parseSiteJobsList({
     case SiteProvider.remoteio:
       return parseRemoteioJobs({ siteId: site.id, html });
     case SiteProvider.builtin:
-      return parseBuiltinJobs({ siteId: site.id, html });
+      return parseCurrentBuiltinJobs({ siteId: site.id, html });
     case SiteProvider.naukri:
       return parseNaukriJobs({ siteId: site.id, html });
     case SiteProvider.robertHalf:
@@ -472,13 +473,15 @@ export function parseGlassDoorJobs({ siteId, html }: { siteId: number; html: str
     const title = el.querySelector(`#job-title-${externalId}`)?.textContent?.trim() || '';
     if (!title) return null;
 
-    const companyName = el.querySelector('.jobCard .EmployerProfile_profileContainer__63w3R')?.textContent?.trim();
+    const employer =
+      el.querySelector(`#job-employer-${externalId}`) ||
+      el.querySelector('.jobCard [class*="EmployerProfile_profileContainer__"]');
+    const companyName =
+      employer?.querySelector('[class*="EmployerProfile_compactEmployerName__"]')?.textContent?.trim() ||
+      employer?.textContent?.trim();
     if (!companyName) return null;
 
-    const companyLogo = el
-      .querySelector('.jobCard .EmployerLogo_logoContainer__7hw16 > img')
-      ?.getAttribute('src')
-      ?.trim();
+    const companyLogo = employer?.querySelector('img')?.getAttribute('src')?.trim();
 
     const location = el.querySelector(`#job-location-${externalId}`)?.textContent?.trim();
 

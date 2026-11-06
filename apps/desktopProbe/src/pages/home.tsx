@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom';
 
 import { JobTabs } from '@/components/home/jobTabs';
 import { JobsListSkeleton } from '@/components/home/jobsSkeleton';
-import { useLinks } from '@first2apply/ui';
-import { Button } from '@first2apply/ui';
-import { Skeleton } from '@first2apply/ui';
+import { useLinks } from '@careeros/ui';
+import { Button } from '@careeros/ui';
+import { Skeleton } from '@careeros/ui';
 
 import { DefaultLayout } from './defaultLayout';
 
@@ -56,7 +56,7 @@ function NoLinks() {
     <DefaultLayout className={`flex h-screen w-full max-w-[800px] flex-col justify-evenly pb-14 md:px-10 lg:px-20`}>
       <div className="flex flex-col items-center gap-10">
         <h1 className="text-3xl font-semibold sm:text-4xl md:text-5xl lg:text-6xl">
-          Be the: <span className="text-primary">first 2 apply</span>
+          Be the: <span className="text-primary">CareerOS</span>
         </h1>
         <p className="text-center text-muted-foreground">
           Save your tailored job searches from top job platforms, and let us do the heavy lifting. We'll monitor your

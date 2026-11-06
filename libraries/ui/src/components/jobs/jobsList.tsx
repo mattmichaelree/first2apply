@@ -3,7 +3,7 @@
 import { createRef, useEffect, useMemo, useState } from "react"
 import InfiniteScroll from "react-infinite-scroll-component"
 
-import { Job } from "@first2apply/core"
+import { Job } from "@careeros/core"
 
 import { useSites } from "../../hooks/useSites"
 import { cn } from "../../lib/utils"

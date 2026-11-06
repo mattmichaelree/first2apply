@@ -33,6 +33,7 @@ export const SettingsProvider = ({ children }: React.PropsWithChildren<unknown>)
   const [isLoading, setIsLoading] = useState(true);
   const [settings, setSettings] = useState<JobScannerSettings>({
     cronRule: undefined,
+    siteCronRules: {},
     useSound: false,
     preventSleep: false,
     areEmailAlertsEnabled: true,
@@ -43,12 +44,17 @@ export const SettingsProvider = ({ children }: React.PropsWithChildren<unknown>)
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        if (!isLoggedIn) return;
+        if (!isLoggedIn) {
+          setIsLoading(false);
+          return;
+        }
+        setIsLoading(true);
         const fetchedSettings = await getProbeSettings();
         setSettings(fetchedSettings);
-        setIsLoading(false);
       } catch (error) {
         handleError({ error });
+      } finally {
+        setIsLoading(false);
       }
     };
 

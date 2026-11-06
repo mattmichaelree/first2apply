@@ -1,7 +1,7 @@
 {
-  "name": "@beastx/first2apply",
-  "version": "2.4.0",
-  "description": "",
+  "name": "@careeros/workspace",
+  "version": "0.1.0",
+  "description": "CareerOS job discovery and intelligence workspace",
   "packageManager": "pnpm@10.32.1",
   "scripts": {
     "audit": "pnpm audit --audit-level=critical",
@@ -11,21 +11,21 @@
     "gitPreCommit": "npx lint-staged --relative",
     "gitCommitMessage": "npx commitlint",
     "gitPrePush": "pnpm run typecheck",
-    "dev": "npx nx run-many -t dev",
-    "build": "npx nx run-many -t build",
-    "typecheck": "npx nx run-many -t typecheck",
-    "test": "npx nx run-many -t test",
-    "lint": "npx nx run-many -t lint",
-    "prettier": "npx nx run-many -t prettier",
-    "make": "npx nx run-many -t make",
-    "publish": "npx nx run-many -t publish",
-    "release": "npx release-it --ci"
+    "dev": "corepack pnpm --parallel --filter @careeros/backend --filter careeros-desktop run dev",
+    "build": "corepack pnpm --workspace-concurrency=1 --filter @careeros/core --filter @careeros/ui --filter @careeros/backend --filter careeros-desktop run build",
+    "typecheck": "corepack pnpm --filter @careeros/core run build && corepack pnpm --filter @careeros/ui run build && corepack pnpm --workspace-concurrency=1 --filter @careeros/core --filter @careeros/ui --filter @careeros/backend --filter careeros-desktop run typecheck",
+    "test": "corepack pnpm --if-present --workspace-concurrency=1 --filter @careeros/core --filter @careeros/ui --filter @careeros/backend --filter careeros-desktop run test",
+    "lint": "corepack pnpm --if-present --workspace-concurrency=1 --filter @careeros/core --filter @careeros/ui --filter @careeros/backend --filter careeros-desktop run lint",
+    "prettier": "corepack pnpm --if-present --workspace-concurrency=1 --filter @careeros/core --filter @careeros/ui --filter @careeros/backend --filter careeros-desktop run prettier",
+    "make": "corepack pnpm --filter careeros-desktop run make"
   },
-  "author": "BeastX Industries",
+  "author": "CareerOS",
   "license": "MIT",
   "workspaces": [
-    "apps/*",
-    "libraries/*"
+    "apps/backend",
+    "apps/desktopProbe",
+    "libraries/core",
+    "libraries/ui"
   ],
   "release-it": {
     "git": {

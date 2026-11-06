@@ -1,4 +1,4 @@
-import { StripeConfig } from '@first2apply/core';
+import { StripeConfig } from '@careeros/core';
 
 const devConfig: StripeConfig = {
   customerPortalLink: 'https://billing.stripe.com/p/login/test_3csbLi9tW6AH48wfYY',

@@ -1,4 +1,4 @@
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@first2apply/ui';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@careeros/ui';
 
 import { DefaultLayout } from './defaultLayout';
 
@@ -88,8 +88,8 @@ export function HelpPage() {
       <div className="flex items-center justify-end gap-4">
         <p className="text-base">
           Didn't find what you need? You can send us an email at{' '}
-          <a href="mailto:contact@first2apply.com" className="text-primary underline">
-            contact@first2apply.com
+          <a href="mailto:support@careeros.local" className="text-primary underline">
+            support@careeros.local
           </a>
         </p>
       </div>

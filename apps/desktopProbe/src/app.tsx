@@ -2,9 +2,9 @@ import { ComponentType, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Route, RouterProvider, createMemoryRouter, createRoutesFromElements } from 'react-router-dom';
 
-import { SdkProvider, Toaster } from '@first2apply/ui';
-import { LinksProvider } from '@first2apply/ui';
-import { SitesProvider } from '@first2apply/ui';
+import { SdkProvider, Toaster } from '@careeros/ui';
+import { LinksProvider } from '@careeros/ui';
+import { SitesProvider } from '@careeros/ui';
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
 

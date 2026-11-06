@@ -2,15 +2,13 @@ import * as dotenv from 'dotenv';
 
 import { IAnalyticsClient } from '@/lib/analytics';
 import { NewAppVersion } from '@/lib/types';
-import { getExceptionMessage, throwError } from '@first2apply/core';
+import { getExceptionMessage, throwError } from '@careeros/core';
 import { Notification, app, autoUpdater, shell } from 'electron';
 import * as fs from 'fs';
 import { ScheduledTask, schedule } from 'node-cron';
 import * as semver from 'semver';
 
 import { ILogger } from './logger';
-
-const S3_BUCKET = 'https://s3.eu-central-1.amazonaws.com/first2apply.com/releases';
 
 type ReleaseJson = {
   currentRelease: string;
@@ -35,7 +33,7 @@ type LatestRelease = {
  * Class used to handle the auto-updates. For now only supported on MacOS since Windows updates
  * are handled by the Microsoft Store.
  */
-export class F2aAutoUpdater {
+export class CareerOsAutoUpdater {
   private _canAutoUpdate = false;
   private _cronJob: ScheduledTask | undefined;
   private _notification: Notification | undefined;
@@ -49,10 +47,12 @@ export class F2aAutoUpdater {
     private _logger: ILogger,
     private _onQuit: () => Promise<void>,
     private _analytics: IAnalyticsClient,
+    updateFeedBaseUrl?: string,
   ) {
-    // only enable auto-updates in packaged apps
-    this._canAutoUpdate = app.isPackaged;
-    this._feedUrl = `${S3_BUCKET}/${process.platform}/${process.arch}/RELEASES.json`;
+    this._canAutoUpdate = app.isPackaged && Boolean(updateFeedBaseUrl);
+    this._feedUrl = updateFeedBaseUrl
+      ? `${updateFeedBaseUrl.replace(/\/$/, '')}/${process.platform}/${process.arch}/RELEASES.json`
+      : '';
   }
 
   /**

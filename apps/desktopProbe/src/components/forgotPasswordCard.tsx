@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 
-import { Button } from '@first2apply/ui';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@first2apply/ui';
-import { Input } from '@first2apply/ui';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@first2apply/ui';
-import { useForm } from '@first2apply/ui';
+import { Button } from '@careeros/ui';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@careeros/ui';
+import { Input } from '@careeros/ui';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@careeros/ui';
+import { useForm } from '@careeros/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 

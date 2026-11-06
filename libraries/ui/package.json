@@ -1,9 +1,10 @@
 {
-  "name": "@first2apply/ui",
+  "name": "@careeros/ui",
   "version": "1.0.0",
-  "description": "Shared UI components for First2Apply applications",
+  "description": "Shared UI components for CareerOS applications",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "typings": "build/index.d.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc",
@@ -15,7 +16,7 @@
     "build/**/*"
   ],
   "dependencies": {
-    "@first2apply/core": "workspace:*",
+    "@careeros/core": "workspace:*",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",

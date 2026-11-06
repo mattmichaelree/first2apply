@@ -1,6 +1,8 @@
 import { assert, assertEquals } from '@std/assert';
 
+import { parseGlassDoorJobs } from './jobListParser.ts';
 import { TestLogger } from './logger.ts';
+import { parseBuiltinJobs } from './parsers/builtin.ts';
 import { parseDiceJobs } from './parsers/dice.ts';
 import { parseHiringCafeJobs } from './parsers/hiringCafe.ts';
 import { parseLinkedInJobs } from './parsers/linkedin.ts';
@@ -12,6 +14,57 @@ const diceNoResultsUrl = new URL('./__fixtures__/jobBoards/dice-no-results.html'
 const hiringCafeUrl = new URL('./__fixtures__/jobBoards/hiringcafe.html', import.meta.url);
 
 const logger = new TestLogger();
+
+Deno.test('Glassdoor parses company and logo when generated CSS class suffixes change', () => {
+  const html = `<ul class="JobsList_jobsList__lqjTr">
+    <li data-jobid="1010315006122" data-test="jobListing">
+      <div class="jobCard JobCard_jobCardContent__Bbij_">
+        <div id="job-employer-1010315006122" class="EmployerProfile_profileContainer__FbmWc">
+          <img src="https://example.com/logo.png" alt="Company Logo">
+          <div class="EmployerProfile_employerNameContainer__Wt7K9">
+            <span class="EmployerProfile_compactEmployerName__hAn5f">USA TODAY Co.</span>
+          </div>
+        </div>
+        <a id="job-title-1010315006122" href="https://www.glassdoor.com/job-listing/example?jl=1010315006122">Sr Director, Marketing Operations</a>
+        <div id="job-location-1010315006122">Remote</div>
+        <div id="job-salary-1010315006122">$150K - $170K (Employer provided)</div>
+      </div>
+    </li>
+  </ul>`;
+
+  const result = parseGlassDoorJobs({ siteId: 2, html });
+
+  assert(result.listFound);
+  assertEquals(result.elementsCount, 1);
+  assertEquals(result.jobs.length, 1);
+  assertEquals(result.jobs[0].externalId, '1010315006122');
+  assertEquals(result.jobs[0].companyName, 'USA TODAY Co.');
+  assertEquals(result.jobs[0].companyLogo, 'https://example.com/logo.png');
+  assertEquals(result.jobs[0].title, 'Sr Director, Marketing Operations');
+});
+
+Deno.test('Built In job parsing reads the current job-match payload', () => {
+  const html = `<script>Builtin.jobMatchInit({"jobs":[{"id":11448066,"title":"Director, Lifecycle Marketing","url":"https://builtin.com/job/director-lifecycle-marketing/11448066","companyName":"Braze","companyLogo":"https://builtin.com/braze.png","location":"Austin, TX","isRemote":false,"isHybrid":true,"isOnSite":true,"body":"Use tools (carefully); keep going"},{"id":"11465531","title":"Principal Product Marketing Manager","url":"https://builtin.com/job/principal-product-marketing-manager/11465531","companyName":"GitLab","companyLogo":null,"location":"United States","isRemote":true,"isHybrid":false,"isOnSite":false}]});</script>`;
+
+  const result = parseBuiltinJobs({ siteId: 103, html });
+
+  assert(result.listFound, 'Expected Built In job-match payload to be located');
+  assertEquals(result.elementsCount, 2);
+  assertEquals(result.jobs.length, 2);
+  assertEquals(result.jobs[0], {
+    siteId: 103,
+    externalId: '11448066',
+    externalUrl: 'https://builtin.com/job/director-lifecycle-marketing/11448066',
+    title: 'Director, Lifecycle Marketing',
+    companyName: 'Braze',
+    companyLogo: 'https://builtin.com/braze.png',
+    location: 'Austin, TX',
+    jobType: 'hybrid',
+    labels: [],
+    tags: [],
+  });
+  assertEquals(result.jobs[1]?.jobType, 'remote');
+});
 
 Deno.test('parseLinkedInJobs parses v1 list markup', async () => {
   const fileContent = await Deno.readTextFile(linkedinUrl);
@@ -175,7 +228,7 @@ Deno.test('Hiring Cafe job parsing', async () => {
   assert(firstJob, 'First job should be parsed');
   assertEquals(firstJob.siteId, 102);
   assertEquals(firstJob.externalId, 'uqwr7pqvbx1llubw');
-  assertEquals(firstJob.externalUrl, 'https://hiring.cafe/job/uqwr7pqvbx1llubw');
+  assertEquals(firstJob.externalUrl, 'https://hiringcafe.com/job/uqwr7pqvbx1llubw');
   assertEquals(firstJob.title, 'Drive Systems Sales Specialist');
   assertEquals(firstJob.companyName, 'Schneider Electric');
   assertEquals(firstJob.location, 'Milan or Stezzano or Turin');

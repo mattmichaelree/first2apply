@@ -6,21 +6,36 @@ import { PricingOptions } from '@/components/pricingOptions';
 import { FiltersSkeleton } from '@/components/skeletons/filtersSkeleton';
 import { useError } from '@/hooks/error';
 import { useSession } from '@/hooks/session';
-import { getAdvancedMatchingConfig, openExternalUrl, updateAdvancedMatchingConfig } from '@/lib/electronMainSdk';
-import { StripeBillingPlan, SubscriptionTier } from '@first2apply/core';
-import { Alert, AlertDescription, AlertTitle } from '@first2apply/ui';
+import {
+  getAdvancedMatchingConfig,
+  getOpenRouterSettings,
+  openExternalUrl,
+  removeOpenRouterSettings,
+  saveOpenRouterSettings,
+  updateAdvancedMatchingConfig,
+} from '@/lib/electronMainSdk';
+import {
+  DEFAULT_OPENROUTER_MODEL,
+  OPENROUTER_MODELS,
+  OpenRouterModel,
+  StripeBillingPlan,
+  SubscriptionTier,
+  parseOpenRouterModel,
+} from '@careeros/core';
+import { Alert, AlertDescription, AlertTitle } from '@careeros/ui';
 import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@first2apply/ui';
-import { Badge } from '@first2apply/ui';
-import { Button } from '@first2apply/ui';
-import { Input } from '@first2apply/ui';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@first2apply/ui';
-import { useToast } from '@first2apply/ui';
+} from '@careeros/ui';
+import { Badge } from '@careeros/ui';
+import { Button } from '@careeros/ui';
+import { Input } from '@careeros/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@careeros/ui';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@careeros/ui';
+import { useToast } from '@careeros/ui';
 
 import { DefaultLayout } from './defaultLayout';
 
@@ -35,6 +50,9 @@ export function FiltersPage() {
   const [isSubscriptionDialogOpen, setSubscriptionDialogOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showAllBlacklistedCompanies, setShowAllBlacklistedCompanies] = useState(false);
+  const [openRouterApiKey, setOpenRouterApiKey] = useState('');
+  const [openRouterModel, setOpenRouterModel] = useState<OpenRouterModel>(DEFAULT_OPENROUTER_MODEL);
+  const [isOpenRouterConfigured, setIsOpenRouterConfigured] = useState(false);
 
   /**
    * Load the advanced matching filters from the user's profile.
@@ -42,11 +60,13 @@ export function FiltersPage() {
   useEffect(() => {
     const asyncLoad = async () => {
       try {
-        const config = await getAdvancedMatchingConfig();
+        const [config, openRouterSettings] = await Promise.all([getAdvancedMatchingConfig(), getOpenRouterSettings()]);
         if (config) {
           setUserAiInput(config.chatgpt_prompt);
           setBlacklistedCompanies(config.blacklisted_companies);
         }
+        setOpenRouterModel(openRouterSettings.model);
+        setIsOpenRouterConfigured(openRouterSettings.isConfigured);
       } catch (error) {
         handleError({ error, title: 'Failed to load advanced matching filters' });
       } finally {
@@ -77,6 +97,33 @@ export function FiltersPage() {
       }
     } catch (error) {
       handleError({ error, title: 'Failed to save advanced matching filters' });
+    }
+  };
+
+  const onSaveOpenRouter = async () => {
+    try {
+      const settings = await saveOpenRouterSettings({
+        apiKey: openRouterApiKey || undefined,
+        model: openRouterModel,
+      });
+      setOpenRouterApiKey('');
+      setOpenRouterModel(settings.model);
+      setIsOpenRouterConfigured(settings.isConfigured);
+      toast({ title: 'OpenRouter settings saved securely' });
+    } catch (error) {
+      handleError({ error, title: 'Failed to save OpenRouter settings' });
+    }
+  };
+
+  const onRemoveOpenRouter = async () => {
+    try {
+      const settings = await removeOpenRouterSettings();
+      setOpenRouterApiKey('');
+      setOpenRouterModel(settings.model);
+      setIsOpenRouterConfigured(settings.isConfigured);
+      toast({ title: 'OpenRouter key removed' });
+    } catch (error) {
+      handleError({ error, title: 'Failed to remove OpenRouter key' });
     }
   };
 
@@ -128,6 +175,64 @@ export function FiltersPage() {
   return (
     <DefaultLayout className="flex flex-col space-y-16 p-6 md:p-10">
       <h1 className="w-fit text-2xl font-medium tracking-wide">Advanced Matching</h1>
+
+      <section className="rounded-lg border border-border bg-card p-6">
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-medium">AI provider</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Your OpenRouter key is encrypted on this computer and is never stored in your CareerOS account.
+            </p>
+          </div>
+          <Badge variant={isOpenRouterConfigured ? 'default' : 'secondary'}>
+            {isOpenRouterConfigured ? 'Key configured' : 'Key required'}
+          </Badge>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_280px]">
+          <div>
+            <label htmlFor="openrouter-api-key" className="mb-2 block text-sm font-medium">
+              OpenRouter API key
+            </label>
+            <Input
+              id="openrouter-api-key"
+              type="password"
+              value={openRouterApiKey}
+              onChange={(event) => setOpenRouterApiKey(event.target.value)}
+              placeholder={isOpenRouterConfigured ? 'Saved securely. Enter a new key to replace it.' : 'sk-or-v1-...'}
+              autoComplete="off"
+              className="bg-background"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="openrouter-model" className="mb-2 block text-sm font-medium">
+              Filtering model
+            </label>
+            <Select value={openRouterModel} onValueChange={(value) => setOpenRouterModel(parseOpenRouterModel(value))}>
+              <SelectTrigger id="openrouter-model" className="w-full bg-background">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {OPENROUTER_MODELS.map((model) => (
+                  <SelectItem key={model.id} value={model.id}>
+                    {model.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="mt-5 flex justify-end gap-2">
+          {isOpenRouterConfigured && (
+            <Button variant="secondary" onClick={onRemoveOpenRouter}>
+              Remove key
+            </Button>
+          )}
+          <Button onClick={onSaveOpenRouter}>{isOpenRouterConfigured ? 'Update provider' : 'Save provider'}</Button>
+        </div>
+      </section>
 
       <section>
         <p className="mb-4 text-lg">

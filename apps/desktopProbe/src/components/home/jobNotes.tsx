@@ -6,7 +6,7 @@ import TextareaAutosize from 'react-textarea-autosize';
 
 import { useError } from '@/hooks/error';
 import { addFileToNote, createNote, deleteNote, listNotes, updateNote } from '@/lib/electronMainSdk';
-import { Note } from '@first2apply/core';
+import { Note } from '@careeros/core';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,12 +14,12 @@ import {
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogTitle,
-} from '@first2apply/ui';
-import { useToast } from '@first2apply/ui';
-import { AlertDialogFooter, AlertDialogHeader } from '@first2apply/ui';
-import { Button } from '@first2apply/ui';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@first2apply/ui';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@first2apply/ui';
+} from '@careeros/ui';
+import { useToast } from '@careeros/ui';
+import { AlertDialogFooter, AlertDialogHeader } from '@careeros/ui';
+import { Button } from '@careeros/ui';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@careeros/ui';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@careeros/ui';
 import remarkGfm from 'remark-gfm';
 
 /**

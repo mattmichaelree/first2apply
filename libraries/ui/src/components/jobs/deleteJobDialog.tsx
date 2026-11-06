@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { Job } from "@first2apply/core"
+import { Job } from "@careeros/core"
 
 import {
   AlertDialog,

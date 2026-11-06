@@ -1,13 +1,13 @@
 import { useState } from 'react';
 
 import { useError } from '@/hooks/error';
-import { Link } from '@first2apply/core';
-import { Button } from '@first2apply/ui';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@first2apply/ui';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@first2apply/ui';
-import { Input } from '@first2apply/ui';
-import { useForm } from '@first2apply/ui';
-import { useToast } from '@first2apply/ui';
+import { Link } from '@careeros/core';
+import { Button } from '@careeros/ui';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@careeros/ui';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@careeros/ui';
+import { Input } from '@careeros/ui';
+import { useForm } from '@careeros/ui';
+import { useToast } from '@careeros/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
@@ -80,7 +80,7 @@ export function EditLink({
         <DialogHeader>
           <DialogTitle className="text-xl font-medium tracking-wide">Update job search</DialogTitle>
           <DialogDescription>
-            Give this search a name so you can easily find it later. First 2 Apply will keep monitoring this search and
+            Give this search a name so you can easily find it later. CareerOS will keep monitoring this search and
             let you know when it finds new jobs.
           </DialogDescription>
         </DialogHeader>
