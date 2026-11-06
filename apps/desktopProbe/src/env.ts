@@ -19,6 +19,7 @@ export const ENV = {
   nodeEnv: process.env.NODE_ENV,
   appBundleId: process.env.APP_BUNDLE_ID,
   careerOsWebUrl: getCareerOsWebUrl(process.env.CAREEROS_WEB_URL ?? DEFAULT_CAREEROS_WEB_URL),
+  jobSweepExtensionPath: process.env.CAREEROS_JOB_SWEEP_EXTENSION_PATH?.trim() || undefined,
   supabase: {
     url: process.env.SUPABASE_URL,
     key: process.env.SUPABASE_KEY,

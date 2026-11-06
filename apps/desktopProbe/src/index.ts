@@ -13,6 +13,7 @@ import { CareerOsAutoUpdater } from './server/autoUpdater';
 import { isCareerOsWebNavigation, loadCareerOsWebHost } from './server/careerosWebHost';
 import { promiseAllSequence } from './server/helpers';
 import { HtmlDownloader } from './server/htmlDownloader';
+import { loadJobSweepExtension } from './server/jobSweepExtension';
 import { JobScanner } from './server/jobScanner';
 import { logger } from './server/logger';
 import { OpenRouterSettingsStore } from './server/openRouterSettings';
@@ -250,6 +251,23 @@ async function bootstrap() {
 
     const mainWindow = createMainWindow();
     overlayBrowserView.setMainWindow(mainWindow);
+
+    const jobSweepResult = await loadJobSweepExtension({
+      extensionPath: ENV.jobSweepExtensionPath,
+      manifestExists: (extensionPath) => fs.existsSync(path.join(extensionPath, 'manifest.json')),
+      loadExtension: (extensionPath) =>
+        mainWindow.webContents.session.extensions.loadExtension(extensionPath),
+      removeExtension: (extensionId) =>
+        mainWindow.webContents.session.extensions.removeExtension(extensionId),
+      onFailure: (error) => {
+        logger.error(`Job Sweep extension unavailable: ${getExceptionMessage(error)}`);
+      },
+    });
+    if (jobSweepResult.status === 'loaded') {
+      logger.info(
+        `loaded Job Sweep ${jobSweepResult.extension.version} (${jobSweepResult.extension.id})`,
+      );
+    }
 
     // track the app start event
     analytics.trackEvent('app_start');
