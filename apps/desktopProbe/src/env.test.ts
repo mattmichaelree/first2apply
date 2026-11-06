@@ -1,4 +1,4 @@
-import { DEFAULT_CAREEROS_WEB_URL, getCareerOsAutostart, getCareerOsWebUrl } from './env';
+import { DEFAULT_CAREEROS_WEB_URL, getCareerOsAutostart, getCareerOsWebUrl, isConfiguredValue } from './env';
 
 import { describe, expect, it } from '@jest/globals';
 
@@ -29,5 +29,18 @@ describe('CareerOS local runtime configuration', () => {
 
   it.each(['0', 'false', 'no', 'off'])('allows a reversible autostart opt-out with %p', (value) => {
     expect(getCareerOsAutostart(value)).toBe(false);
+  });
+});
+
+describe('optional remote service configuration', () => {
+  it.each([undefined, '', ' ', 'disabled', 'DISABLED', 'none', 'null', 'undefined'])(
+    'treats placeholder value %p as disabled',
+    (value) => {
+      expect(isConfiguredValue(value)).toBe(false);
+    },
+  );
+
+  it.each(['real-key', 'http://127.0.0.1:54321'])('accepts configured value %p', (value) => {
+    expect(isConfiguredValue(value)).toBe(true);
   });
 });

@@ -19,6 +19,11 @@ export function getCareerOsAutostart(value = process.env.CAREEROS_AUTOSTART) {
   return !new Set(['0', 'false', 'no', 'off']).has(value?.trim().toLowerCase() ?? '');
 }
 
+export function isConfiguredValue(value: string | undefined) {
+  const normalized = value?.trim().toLowerCase();
+  return Boolean(normalized && !new Set(['disabled', 'none', 'null', 'undefined']).has(normalized));
+}
+
 export const ENV = {
   nodeEnv: process.env.NODE_ENV,
   appBundleId: process.env.APP_BUNDLE_ID,

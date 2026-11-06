@@ -1,4 +1,4 @@
-import { ENV } from '../env';
+import { ENV, isConfiguredValue } from '../env';
 
 import { Logger as MezmoLogger, createLogger } from '@logdna/logger';
 import { app } from 'electron';
@@ -47,7 +47,7 @@ class Logger implements ILogger {
   }
 }
 
-const mezmoLogger = ENV.mezmoApiKey
+const mezmoLogger = isConfiguredValue(ENV.mezmoApiKey)
   ? createLogger(ENV.mezmoApiKey, {
       level: ENV.nodeEnv === 'development' ? 'debug' : 'info',
       app: ENV.appBundleId,
@@ -60,4 +60,10 @@ const mezmoLogger = ENV.mezmoApiKey
       indexMeta: true,
     })
   : undefined;
+
+mezmoLogger?.on('error', (error) => {
+  const message = error instanceof Error ? error.message : String(error);
+  console.warn(`remote logging unavailable; continuing locally: ${message}`);
+});
+
 export const logger = new Logger(mezmoLogger);
