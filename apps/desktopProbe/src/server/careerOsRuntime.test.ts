@@ -88,9 +88,7 @@ describe('CareerOS runtime health', () => {
   it('reuses an already healthy API and web app without launching another runtime', async () => {
     const runLauncher = jest.fn(async () => undefined);
     const fetchFn = jest.fn(async (url: string | URL | Request) =>
-      String(url) === CAREEROS_API_READY_URL
-        ? jsonResponse(200, { status: 'ready' })
-        : jsonResponse(200, {}),
+      String(url) === CAREEROS_API_READY_URL ? jsonResponse(200, { status: 'ready' }) : jsonResponse(200, {}),
     );
 
     await expect(
@@ -114,9 +112,7 @@ describe('CareerOS runtime health', () => {
     });
     const fetchFn = jest.fn(async (url: string | URL | Request) => {
       if (!started) throw new Error('ECONNREFUSED');
-      return String(url) === CAREEROS_API_READY_URL
-        ? jsonResponse(200, { status: 'ready' })
-        : jsonResponse(200, {});
+      return String(url) === CAREEROS_API_READY_URL ? jsonResponse(200, { status: 'ready' }) : jsonResponse(200, {});
     });
 
     await expect(

@@ -26,6 +26,24 @@ This project is organized as a monorepo using [Nx](https://nx.dev).
 
 ## Getting Started
 
+### CareerOS Desktop + Job Sweep
+
+For the integrated local workflow, Desktop starts or reuses the current loopback CareerOS API/web build and packages the canonical Job Sweep Chrome extension. Setup uses local pairing; there is no bearer token to copy or paste.
+
+```powershell
+corepack pnpm --filter @careeros/core build
+corepack pnpm --filter @careeros/ui build
+corepack pnpm --filter careeros-desktop start
+```
+
+Run the bounded onboarding check with:
+
+```powershell
+corepack pnpm --filter careeros-desktop smoke:onboarding
+```
+
+See [CareerOS Desktop local onboarding](./docs/careeros-desktop-onboarding.md) for Chrome installation, health diagnostics, packaging, and rollback.
+
 ### 1. Install Dependencies
 
 ```bash

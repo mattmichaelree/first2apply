@@ -120,12 +120,16 @@ export function runCareerOsLauncher(scriptPath: string, workingDirectory: string
       return;
     }
 
-    const child = spawn('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-File', scriptPath, '-NoBrowser'], {
-      cwd: workingDirectory,
-      shell: false,
-      stdio: 'ignore',
-      windowsHide: true,
-    });
+    const child = spawn(
+      'powershell.exe',
+      ['-NoLogo', '-NoProfile', '-NonInteractive', '-File', scriptPath, '-NoBrowser'],
+      {
+        cwd: workingDirectory,
+        shell: false,
+        stdio: 'ignore',
+        windowsHide: true,
+      },
+    );
     const timeout = setTimeout(() => {
       child.kill();
       reject(new Error('CareerOS startup timed out after 120 seconds.'));
@@ -180,7 +184,9 @@ export async function ensureCareerOsRuntime({
     await runLauncher(path.join(discovery.directory, 'scripts', 'start-careeros.ps1'), discovery.directory);
     const health = await checkCareerOsHealth({ fetchFn });
     if (!health.ready) {
-      throw new Error(`startup completed but health remained unavailable (API: ${health.api.detail}; web: ${health.web.detail})`);
+      throw new Error(
+        `startup completed but health remained unavailable (API: ${health.api.detail}; web: ${health.web.detail})`,
+      );
     }
     return {
       status: 'ready',

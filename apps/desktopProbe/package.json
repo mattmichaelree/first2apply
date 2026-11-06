@@ -13,6 +13,7 @@
     "test": "jest --config ./jest.config.ts --verbose",
     "prettier": "prettier --check \"src/**/*.{ts,tsx}\"",
     "stage:job-sweep": "node -r ts-node/register scripts/stage-job-sweep.ts",
+    "smoke:onboarding": "node -r ts-node/register scripts/stage-job-sweep.ts && node -r ts-node/register scripts/careeros-onboarding-smoke.ts",
     "package": "node -r ts-node/register scripts/stage-job-sweep.ts && node -r ts-node/register scripts/run-electron-forge.ts package",
     "make": "node -r ts-node/register scripts/stage-job-sweep.ts && node -r ts-node/register scripts/run-electron-forge.ts make --arch x64",
     "release": "npx release-it --ci"

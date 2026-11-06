@@ -23,12 +23,9 @@ describe('CareerOS web host configuration', () => {
 });
 
 describe('CareerOS local runtime configuration', () => {
-  it.each([undefined, '', '1', 'true', 'yes'])(
-    'keeps local autostart enabled for %p',
-    (value) => {
-      expect(getCareerOsAutostart(value)).toBe(true);
-    },
-  );
+  it.each([undefined, '', '1', 'true', 'yes'])('keeps local autostart enabled for %p', (value) => {
+    expect(getCareerOsAutostart(value)).toBe(true);
+  });
 
   it.each(['0', 'false', 'no', 'off'])('allows a reversible autostart opt-out with %p', (value) => {
     expect(getCareerOsAutostart(value)).toBe(false);
