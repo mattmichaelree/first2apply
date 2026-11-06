@@ -41,7 +41,7 @@ Connect requests a session directly from the loopback CareerOS API. Normal local
 
 ## Health and smoke checks
 
-The bounded smoke starts or reuses CareerOS, stages the canonical extension, verifies API/web health, checks the stable extension identity and local-pairing contract, and confirms an unrecognized extension origin receives HTTP 403. It does not save a job, issue an approved pairing token, or call an external provider.
+The bounded smoke starts or reuses CareerOS, stages the canonical extension, verifies API/web health, checks the stable extension identity, confirms an unrecognized extension origin receives HTTP 403, and verifies that the canonical origin can establish an authenticated local session. It never prints the session token, saves a job, or calls an external provider.
 
 ```powershell
 corepack pnpm --filter careeros-desktop smoke:onboarding
@@ -56,6 +56,7 @@ Expected summary fields include:
   "web": "http_200",
   "extension_id": "jgpidoojnckcjkpefbjhpiagfniemena",
   "invalid_pairing_status": 403,
+  "pairing_status": "ready",
   "token_copy_required": false
 }
 ```

@@ -50,6 +50,30 @@ async function main() {
     );
   }
 
+  const paired = await fetch('http://127.0.0.1:8001/extension/v1/session/local', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      Origin: `chrome-extension://${EXPECTED_JOB_SWEEP_EXTENSION_ID}`,
+    },
+    signal: AbortSignal.timeout(3_000),
+  });
+  const pairPayload = (await paired.json()) as { status?: string; token?: string };
+  if (!paired.ok || pairPayload.status !== 'paired' || !pairPayload.token) {
+    throw new Error(`Canonical Job Sweep origin did not pair locally (${paired.status}).`);
+  }
+  const session = await fetch('http://127.0.0.1:8001/extension/v1/session', {
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${pairPayload.token}`,
+    },
+    signal: AbortSignal.timeout(3_000),
+  });
+  const sessionPayload = (await session.json()) as { ready?: boolean };
+  if (!session.ok || sessionPayload.ready !== true) {
+    throw new Error(`Paired Job Sweep session was not ready (${session.status}).`);
+  }
+
   console.log(
     JSON.stringify(
       {
@@ -61,6 +85,7 @@ async function main() {
         extension_version: extension.version,
         source_revision: packageMetadata.source_revision,
         invalid_pairing_status: rejectedPairing.status,
+        pairing_status: 'ready',
         token_copy_required: false,
       },
       null,
