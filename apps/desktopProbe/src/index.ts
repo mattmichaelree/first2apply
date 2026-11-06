@@ -6,11 +6,13 @@ import { createClient } from '@supabase/supabase-js';
 import { BrowserWindow, Notification, app, dialog, nativeTheme, safeStorage, shell } from 'electron';
 import Storage from 'electron-store';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 
 import { AmplitudeAnalyticsClient } from './server/amplitude';
 import { CareerOsAutoUpdater } from './server/autoUpdater';
 import { isCareerOsWebNavigation, loadCareerOsWebHost } from './server/careerosWebHost';
+import { ensureCareerOsRuntime } from './server/careerOsRuntime';
 import { promiseAllSequence } from './server/helpers';
 import { HtmlDownloader } from './server/htmlDownloader';
 import { JobScanner } from './server/jobScanner';
@@ -246,8 +248,31 @@ async function bootstrap() {
       app.setAppUserModelId(ENV.appBundleId);
     }
 
+    const careerOsRuntime = await ensureCareerOsRuntime({
+      autostart: ENV.careerOsAutostart,
+      explicitDirectory: ENV.careerOsJobsDirectory,
+      appPath: app.getAppPath(),
+      homeDirectory: os.homedir(),
+    });
+    logger.info(`CareerOS runtime ${careerOsRuntime.action}`, {
+      status: careerOsRuntime.status,
+      api: careerOsRuntime.health.api.detail,
+      web: careerOsRuntime.health.web.detail,
+      runtimeDirectory: careerOsRuntime.runtimeDirectory,
+    });
+
     const mainWindow = createMainWindow();
     overlayBrowserView.setMainWindow(mainWindow);
+
+    if (careerOsRuntime.status === 'unavailable' && careerOsRuntime.guidance) {
+      void dialog.showMessageBox({
+        type: 'warning',
+        title: 'CareerOS local services are unavailable',
+        message: 'CareerOS Desktop opened its safe fallback.',
+        detail: careerOsRuntime.guidance,
+        buttons: ['Continue'],
+      });
+    }
 
     // track the app start event
     analytics.trackEvent('app_start');
