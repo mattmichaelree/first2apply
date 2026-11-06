@@ -1,4 +1,4 @@
-import { WebPageRuntimeData } from '@careeros/core';
+import { SiteProvider, WebPageRuntimeData } from '@careeros/core';
 
 export const AVAILABLE_CRON_RULES = [
   {
@@ -42,6 +42,7 @@ export type CronRule = (typeof AVAILABLE_CRON_RULES)[number];
 
 export type JobScannerSettings = {
   cronRule?: string;
+  siteCronRules: Partial<Record<SiteProvider, string | null>>;
   preventSleep: boolean;
   useSound: boolean;
   areEmailAlertsEnabled: boolean;

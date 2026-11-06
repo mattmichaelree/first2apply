@@ -166,3 +166,6 @@ verify_jwt = false
 
 [functions.handle-profile-change-webhook]
 verify_jwt = false
+
+[functions.careeros-export]
+verify_jwt = false

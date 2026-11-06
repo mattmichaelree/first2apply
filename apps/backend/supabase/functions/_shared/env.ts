@@ -1,6 +1,4 @@
-import { throwError } from '@careeros/core';
-
-import { OpenRouterConfig } from './openAI.ts';
+import type { OpenRouterConfig } from './openAI.ts';
 
 export type CareerOsBackendEnv = {
   supabaseUrl: string;
@@ -25,8 +23,7 @@ export function parseEnv(): CareerOsBackendEnv {
     mailerLiteApiKey: Deno.env.get('MAILERLITE_API_KEY'),
     mailerSendApiKey: Deno.env.get('MAILERSEND_API_KEY'),
     mezmoApiKey: Deno.env.get('MEZMO_API_KEY') ?? '',
-    careerosWebhookSecret:
-      Deno.env.get('CAREEROS_WEBHOOK_SECRET') ?? throwError('CAREEROS_WEBHOOK_SECRET is not set'),
+    careerosWebhookSecret: Deno.env.get('CAREEROS_WEBHOOK_SECRET') ?? '',
     stripeSecretKey: Deno.env.get('STRIPE_SECRET_KEY') ?? '',
     stripeWebhookSigningSecret: Deno.env.get('STRIPE_WEBHOOK_SIGNING_SECRET') ?? '',
     webappUrl: Deno.env.get('WEBAPP_URL') ?? '',

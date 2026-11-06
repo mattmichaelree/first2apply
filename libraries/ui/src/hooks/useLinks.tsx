@@ -71,9 +71,10 @@ export const LinksProvider = ({
     try {
       const fetchedLinks = await sdk.listLinks()
       setLinks(fetchedLinks)
-      setIsLoading(false)
     } catch (error) {
       handleError({ error })
+    } finally {
+      setIsLoading(false)
     }
   }
 

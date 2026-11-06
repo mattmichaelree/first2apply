@@ -9,6 +9,7 @@ import {
   JobScore,
   JobStatus,
   Link,
+  OpenRouterRequestConfig,
   WebPageRuntimeData,
   ListRankedJobsParams,
   ListRankedJobsResult,
@@ -112,23 +113,7 @@ export class CareerOsSupabaseApi {
   /**
    * Create a new link.
    */
-  async createLink({
-    title,
-    url,
-    html,
-    webPageRuntimeData,
-    force,
-  }: {
-    title: string
-    url: string
-    html: string
-    webPageRuntimeData: WebPageRuntimeData
-    force: boolean
-  }) {
-    // for debugging, use a test.html file
-    // const htmlFixture = fs.readFileSync(path.join(__dirname, '../../../test.html'), 'utf-8');
-    // html = htmlFixture;
-
+  async createLink({ title, url }: { title: string; url: string }) {
     const { link, newJobs } = await this._supabaseApiCall(() =>
       this._supabase.functions.invoke<{ link: Link; newJobs: Job[] }>(
         "create-link",
@@ -136,9 +121,6 @@ export class CareerOsSupabaseApi {
           body: {
             title,
             url,
-            html,
-            webPageRuntimeData,
-            force,
           },
         }
       )
@@ -161,7 +143,7 @@ export class CareerOsSupabaseApi {
   }): Promise<Link> {
     const updatedLink = await this._supabaseApiCall(async () =>
       this._supabase
-        .from("links")
+        .from("discovery_links")
         .update({ title, url })
         .eq("id", linkId)
         .select("*")
@@ -176,7 +158,10 @@ export class CareerOsSupabaseApi {
    */
   listLinks(): Promise<Link[]> {
     return this._supabaseApiCall(async () =>
-      this._supabase.from("links").select("*").order("id", { ascending: false })
+      this._supabase
+        .from("discovery_links")
+        .select("*")
+        .order("id", { ascending: false })
     )
   }
 
@@ -185,7 +170,7 @@ export class CareerOsSupabaseApi {
    */
   deleteLink(linkId: number) {
     return this._supabaseApiCall(async () =>
-      this._supabase.from("links").delete().eq("id", linkId)
+      this._supabase.from("discovery_links").delete().eq("id", linkId)
     )
   }
 
@@ -221,11 +206,13 @@ export class CareerOsSupabaseApi {
     html,
     maxRetries,
     retryCount,
+    openRouter,
   }: {
     jobId: number
     html: string
     maxRetries: number
     retryCount: number
+    openRouter?: OpenRouterRequestConfig
   }) {
     return this._supabaseApiCall(() =>
       this._supabase.functions.invoke<{ job: Job; parseFailed: boolean }>(
@@ -236,6 +223,7 @@ export class CareerOsSupabaseApi {
             html,
             maxRetries,
             retryCount,
+            openRouter,
           },
         }
       )
@@ -288,7 +276,7 @@ export class CareerOsSupabaseApi {
     const jobs_labels = labels && labels.length > 0 ? labels : undefined
     const [jobs, counters] = await Promise.all([
       this._supabaseApiCall<Job[], PostgrestError>(async () => {
-        const res = await this._supabase.rpc("list_jobs", {
+        const res = await this._supabase.rpc("discovery_list_jobs", {
           jobs_status: status,
           jobs_after: after ?? null,
           jobs_page_size: limit,
@@ -307,7 +295,7 @@ export class CareerOsSupabaseApi {
         }>,
         PostgrestError
       >(async () => {
-        const res = await this._supabase.rpc("count_jobs", {
+        const res = await this._supabase.rpc("discovery_count_jobs", {
           jobs_search,
           jobs_site_ids,
           jobs_link_ids,
@@ -343,7 +331,7 @@ export class CareerOsSupabaseApi {
     return this._supabaseApiCall(
       async () =>
         await this._supabase
-          .from("jobs")
+          .from("discovery_jobs")
           .update({
             status,
             updated_at: luxon.DateTime.now().toUTC().toJSDate(),
@@ -366,7 +354,7 @@ export class CareerOsSupabaseApi {
     const [updatedJob] = await this._supabaseApiCall(
       async () =>
         await this._supabase
-          .from("jobs")
+          .from("discovery_jobs")
           .update({
             labels,
           })
@@ -382,7 +370,7 @@ export class CareerOsSupabaseApi {
    */
   listSites() {
     return this._supabaseApiCall(
-      async () => await this._supabase.from("sites").select("*")
+      async () => await this._supabase.from("discovery_sites").select("*")
     )
   }
 
@@ -391,7 +379,7 @@ export class CareerOsSupabaseApi {
    */
   async getJob(jobId: number) {
     const [job] = await this._supabaseApiCall(async () =>
-      this._supabase.from("jobs").select("*").eq("id", jobId)
+      this._supabase.from("discovery_jobs").select("*").eq("id", jobId)
     )
     return job
   }
@@ -402,7 +390,7 @@ export class CareerOsSupabaseApi {
   async changeAllJobStatus({ from, to }: { from: JobStatus; to: JobStatus }) {
     return this._supabaseApiCall(async () =>
       this._supabase
-        .from("jobs")
+        .from("discovery_jobs")
         .update({
           status: to,
           updated_at: luxon.DateTime.now().toUTC().toJSDate(),
@@ -466,7 +454,7 @@ export class CareerOsSupabaseApi {
     const [createdReview] = await this._supabaseApiCall(
       async () =>
         await this._supabase
-          .from("reviews")
+          .from("discovery_reviews")
           .insert({
             title: title.trim(),
             description: description?.trim(),
@@ -483,7 +471,7 @@ export class CareerOsSupabaseApi {
    */
   async getUserReview() {
     const [review] = await this._supabaseApiCall(
-      async () => await this._supabase.from("reviews").select("*")
+      async () => await this._supabase.from("discovery_reviews").select("*")
     )
 
     return review
@@ -506,7 +494,7 @@ export class CareerOsSupabaseApi {
     const [updatedReview] = await this._supabaseApiCall(
       async () =>
         await this._supabase
-          .from("reviews")
+          .from("discovery_reviews")
           .update({
             title: title.trim(),
             description: description?.trim(),
@@ -524,7 +512,7 @@ export class CareerOsSupabaseApi {
    */
   async getProfile() {
     const [profile] = await this._supabaseApiCall(
-      async () => await this._supabase.from("profiles").select("*")
+      async () => await this._supabase.from("discovery_profiles").select("*")
     )
 
     return profile
@@ -545,7 +533,7 @@ export class CareerOsSupabaseApi {
     const [createdNote] = await this._supabaseApiCall(
       async () =>
         await this._supabase
-          .from("notes")
+          .from("discovery_notes")
           .insert({ job_id, text, files })
           .select("*")
     )
@@ -559,7 +547,7 @@ export class CareerOsSupabaseApi {
   async listNotes(job_id: number) {
     return this._supabaseApiCall(async () =>
       this._supabase
-        .from("notes")
+        .from("discovery_notes")
         .select("*")
         .eq("job_id", job_id)
         .order("created_at", { ascending: false })
@@ -572,7 +560,7 @@ export class CareerOsSupabaseApi {
   async updateNote({ noteId, text }: { noteId: number; text: string }) {
     return this._supabaseApiCall(async () =>
       this._supabase
-        .from("notes")
+        .from("discovery_notes")
         .update({ text })
         .eq("id", noteId)
         .select("*")
@@ -585,7 +573,7 @@ export class CareerOsSupabaseApi {
    */
   async addFileToNote({ noteId, file }: { noteId: number; file: string }) {
     const result = await this._supabase
-      .from("notes")
+      .from("discovery_notes")
       .select("files")
       .eq("id", noteId)
       .single()
@@ -600,7 +588,7 @@ export class CareerOsSupabaseApi {
 
     return this._supabaseApiCall(async () =>
       this._supabase
-        .from("notes")
+        .from("discovery_notes")
         .update({ files: updatedFiles })
         .eq("id", noteId)
         .single()
@@ -612,7 +600,7 @@ export class CareerOsSupabaseApi {
    */
   async deleteNote(noteId: number) {
     return this._supabaseApiCall(async () =>
-      this._supabase.from("notes").delete().eq("id", noteId)
+      this._supabase.from("discovery_notes").delete().eq("id", noteId)
     )
   }
 
@@ -621,7 +609,8 @@ export class CareerOsSupabaseApi {
    */
   async getAdvancedMatchingConfig() {
     const [config] = await this._supabaseApiCall(
-      async () => await this._supabase.from("advanced_matching").select("*")
+      async () =>
+        await this._supabase.from("discovery_advanced_matching").select("*")
     )
 
     return config
@@ -639,7 +628,7 @@ export class CareerOsSupabaseApi {
     const [updatedConfig] = await this._supabaseApiCall(
       async () =>
         await this._supabase
-          .from("advanced_matching")
+          .from("discovery_advanced_matching")
           .upsert(config, {
             onConflict: "user_id",
           })
@@ -661,7 +650,7 @@ export class CareerOsSupabaseApi {
   }) {
     await this._supabaseApiCall(async () =>
       this._supabase
-        .from("links")
+        .from("discovery_links")
         .update({ scrape_failure_count: failures })
         .eq("id", linkId)
     )
@@ -672,10 +661,7 @@ export class CareerOsSupabaseApi {
    */
   async getUserSearchProfile() {
     return this._supabaseApiCall(async () =>
-      this._supabase
-        .from("user_search_profiles")
-        .select("*")
-        .maybeSingle()
+      this._supabase.from("user_search_profiles").select("*").maybeSingle()
     ) as Promise<UserSearchProfile | null>
   }
 
@@ -874,10 +860,7 @@ export class CareerOsSupabaseApi {
     const userId = await this._requireCurrentUserId()
     const [enrichments, scores, filterDecisions] = await Promise.all([
       this._supabaseApiCall(async () =>
-        this._supabase
-          .from("job_enrichments")
-          .select("*")
-          .in("job_id", jobIds)
+        this._supabase.from("job_enrichments").select("*").in("job_id", jobIds)
       ) as Promise<JobEnrichment[]>,
       this._supabaseApiCall(async () =>
         this._supabase
@@ -928,7 +911,11 @@ export class CareerOsSupabaseApi {
       ? records
       : records.filter((record) => {
           const decision = record.filterDecision?.decision?.toLowerCase()
-          return decision !== "hide" && decision !== "hidden" && decision !== "exclude"
+          return (
+            decision !== "hide" &&
+            decision !== "hidden" &&
+            decision !== "exclude"
+          )
         })
 
     visibleRecords.sort((a, b) => {
@@ -1001,7 +988,9 @@ export class CareerOsSupabaseApi {
     }
 
     if (filterDecision?.evidence_json) {
-      for (const [label, value] of Object.entries(filterDecision.evidence_json)) {
+      for (const [label, value] of Object.entries(
+        filterDecision.evidence_json
+      )) {
         evidence.push({
           label,
           value: typeof value === "string" ? value : JSON.stringify(value),

@@ -1,4 +1,4 @@
-import { Job } from '@careeros/core';
+import { Job, OpenRouterRequestConfig, parseOpenRouterModel } from '@careeros/core';
 import { getExceptionMessage } from '@careeros/core';
 
 import { applyAdvancedMatchingFilters } from '../_shared/advancedMatching.ts';
@@ -28,12 +28,21 @@ Deno.serve(async (req) => {
       html: string;
       maxRetries?: number;
       retryCount?: number;
+      openRouter?: {
+        apiKey?: unknown;
+        model?: unknown;
+      };
     } = await req.json();
     const { jobId, html, maxRetries, retryCount } = body;
+    const openRouter = parseOpenRouterRequest(body.openRouter);
     logger.info(`processing job description for ${jobId}  ...`);
 
     // find the job and its site
-    const { data: job, error: findJobErr } = await supabaseClient.from('jobs').select('*').eq('id', jobId).single();
+    const { data: job, error: findJobErr } = await supabaseClient
+      .from('discovery_jobs')
+      .select('*')
+      .eq('id', jobId)
+      .single();
     if (findJobErr) {
       throw findJobErr;
     }
@@ -42,7 +51,7 @@ Deno.serve(async (req) => {
     }
 
     const { data: site, error: findSiteErr } = await supabaseClient
-      .from('sites')
+      .from('discovery_sites')
       .select('*')
       .eq('id', job.siteId)
       .single();
@@ -79,7 +88,7 @@ Deno.serve(async (req) => {
           },
         );
 
-        await supabaseClient.from('html_dumps').insert([{ url: job.externalUrl, html }]);
+        await supabaseClient.from('discovery_html_dumps').insert([{ url: job.externalUrl, html }]);
       }
 
       if (updates.description) {
@@ -93,6 +102,7 @@ Deno.serve(async (req) => {
         job: updatedJob,
         supabaseClient,
         supabaseAdminClient,
+        openRouter,
       });
 
       updatedJob = {
@@ -109,7 +119,7 @@ Deno.serve(async (req) => {
       logger.info(`[${site.provider}] ${updatedJob.status} ${job.title}`);
 
       const { error: updateJobErr } = await supabaseClient
-        .from('jobs')
+        .from('discovery_jobs')
         .update({
           description: updatedJob.description,
           salary: updatedJob.salary,
@@ -162,3 +172,18 @@ Deno.serve(async (req) => {
     });
   }
 });
+
+function parseOpenRouterRequest(
+  value: { apiKey?: unknown; model?: unknown } | undefined,
+): OpenRouterRequestConfig | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value.apiKey !== 'string' || !value.apiKey.startsWith('sk-or-')) {
+    throw new Error('Invalid OpenRouter API key');
+  }
+  return {
+    apiKey: value.apiKey,
+    model: parseOpenRouterModel(value.model),
+  };
+}

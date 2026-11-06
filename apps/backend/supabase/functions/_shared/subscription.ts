@@ -17,7 +17,7 @@ export async function checkUserSubscription({
   hasCustomJobsParsing: boolean;
 }> {
   const { data: profile, error } = await supabaseAdminClient
-    .from('profiles')
+    .from('discovery_profiles')
     .select('*')
     .eq('user_id', userId)
     .single();

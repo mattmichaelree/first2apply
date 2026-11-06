@@ -78,9 +78,10 @@ export function FeedbackPage() {
         // load user's OS
         const userOS = await getOS();
         setUserOS(userOS);
-        setIsLoading(false);
       } catch (error) {
         handleError({ error });
+      } finally {
+        setIsLoading(false);
       }
     };
 

@@ -1,10 +1,10 @@
-import { DbSchema, Job, Link, WebPageRuntimeData } from '@careeros/core';
+import { DbSchema, Link } from '@careeros/core';
 import { getExceptionMessage } from '@careeros/core';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.48.1';
 
 import { CORS_HEADERS } from '../_shared/cors.ts';
 import { getEdgeFunctionContext } from '../_shared/edgeFunctions.ts';
-import { cleanJobUrl, parseJobsListUrl } from '../_shared/jobListParser.ts';
+import { cleanJobUrl } from '../_shared/jobSite.ts';
 import { createLoggerWithMeta } from '../_shared/logger.ts';
 import { checkUserSubscription } from '../_shared/subscription.ts';
 
@@ -25,17 +25,14 @@ Deno.serve(async (req) => {
     });
     const { user, supabaseClient } = context;
 
-    const { title, url, html, webPageRuntimeData, force } = (await req.json()) as {
+    const { title, url } = (await req.json()) as {
       title: string;
       url: string;
-      html?: string;
-      webPageRuntimeData?: WebPageRuntimeData;
-      force?: boolean;
     };
     logger.info(`Creating link: ${title} - ${url}`);
 
     // list all job sites from db
-    const { data, error: selectError } = await supabaseClient.from('sites').select('*');
+    const { data, error: selectError } = await supabaseClient.from('discovery_sites').select('*');
     if (selectError) throw new Error(selectError.message);
     const allJobSites = data ?? [];
 
@@ -46,7 +43,7 @@ Deno.serve(async (req) => {
 
     // check how many links the user has already created
     const { data: existingLinks, error: listLinksErr } = await supabaseClient
-      .from('links')
+      .from('discovery_links')
       .select('*')
       .eq('user_id', user.id);
     if (listLinksErr) throw new Error(listLinksErr.message);
@@ -85,7 +82,7 @@ Deno.serve(async (req) => {
     }
 
     const { data: createdLinks, error } = await supabaseClient
-      .from('links')
+      .from('discovery_links')
       .insert({
         url: cleanUrl,
         title,
@@ -98,69 +95,9 @@ Deno.serve(async (req) => {
     const [link] = createdLinks ?? [];
     inFlightLink = link;
 
-    // legacy, we don't parse the jobs list when creating a new link anymore
-    // but need to still return an empty array for compatibility
-    let newJobs: Job[] = [];
-
-    // if an html is provided, parse it and insert the jobs in the db
-    if (html) {
-      const { jobs, parseFailed } = await parseJobsListUrl({
-        allJobSites,
-        link,
-        html,
-        webPageRuntimeData,
-        context,
-      });
-
-      if (parseFailed && !force) {
-        // save the html dump for debugging
-        const { error: htmlDumpError } = await supabaseClient.from('html_dumps').insert([
-          {
-            url: link.url,
-            html,
-            webpage_runtime_data: webPageRuntimeData,
-          },
-        ]);
-        if (htmlDumpError) {
-          logger.error(`failed to save html dump for link ${inFlightLink.id}: ${htmlDumpError.message}`);
-        }
-
-        const errorMessage = `Hmm, we couldn’t detect any jobs on this ${site.name} page. This usually means you’re viewing a single job instead of a list of jobs. If that’s not the case, the site layout may have changed. You can still save it for now while we fix it, or contact us so we can take a look.`;
-        logger.error(errorMessage);
-        // temp disable this error until we can fix linkedin
-        // throw new Error(errorMessage);
-      }
-
-      logger.info(`parsed ${jobs.length} jobs from ${link.url}`);
-
-      // add the link id to the jobs
-      jobs.forEach((job) => {
-        job.link_id = link.id;
-      });
-
-      const { data: upsertedJobs, error: insertError } = await supabaseClient
-        .from('jobs')
-        .upsert(
-          jobs.map((job) => ({
-            ...job,
-            status: 'processing' as const,
-
-            // make sure tags is not null
-            tags: job.tags || [],
-          })),
-          { onConflict: 'user_id, externalId', ignoreDuplicates: true },
-        )
-        .select('*');
-      if (insertError) throw new Error(insertError.message);
-
-      logger.info(`upserted ${upsertedJobs?.length} jobs for link ${link.id}`);
-      newJobs = upsertedJobs?.filter((job) => job.status === 'processing') ?? [];
-      logger.info(`found ${newJobs.length} new jobs`);
-    }
-
     logger.info(`successfully created link: ${link.id}`);
 
-    return new Response(JSON.stringify({ link, newJobs }), {
+    return new Response(JSON.stringify({ link, newJobs: [] }), {
       headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
     });
   } catch (error) {
@@ -173,7 +110,10 @@ Deno.serve(async (req) => {
         Deno.env.get('SUPABASE_URL') ?? '',
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       );
-      const { error: deleteError } = await supabaseClient.from('links').delete().eq('id', inFlightLink.id);
+      const { error: deleteError } = await supabaseClient
+        .from('discovery_links')
+        .delete()
+        .eq('id', inFlightLink.id);
       if (deleteError) {
         logger.error(`failed to delete link ${inFlightLink.id}: ${deleteError.message}`);
       }

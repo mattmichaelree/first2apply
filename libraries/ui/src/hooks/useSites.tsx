@@ -50,9 +50,10 @@ export const SitesProvider = ({
   const fetchSites = async () => {
     try {
       setSites(await sdk.listSites())
-      setIsLoading(false)
     } catch (error) {
       handleError({ error })
+    } finally {
+      setIsLoading(false)
     }
   }
 

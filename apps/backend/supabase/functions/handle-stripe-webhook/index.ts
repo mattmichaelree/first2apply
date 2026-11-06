@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
       // update the user profile
       const tier = (subscription.items.data[0].plan.metadata?.tier ?? 'pro') as SubscriptionTier;
       const { error: updateProfileError } = await supabaseClient
-        .from('profiles')
+        .from('discovery_profiles')
         .update({
           stripe_customer_id: customer.id,
           stripe_subscription_id: subscription.id,

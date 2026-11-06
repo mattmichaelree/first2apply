@@ -15,6 +15,7 @@ import { promiseAllSequence } from './server/helpers';
 import { HtmlDownloader } from './server/htmlDownloader';
 import { JobScanner } from './server/jobScanner';
 import { logger } from './server/logger';
+import { OpenRouterSettingsStore } from './server/openRouterSettings';
 import { OverlayBrowserView } from './server/overlayBrowserView';
 import { initRendererIpcApi } from './server/rendererIpcApi';
 import { TrayMenu } from './server/trayMenu';
@@ -258,6 +259,9 @@ async function bootstrap() {
     // init the HTML downloader
     htmlDownloaders.forEach((htmlDownloader) => htmlDownloader.init());
     const [normalHtmlDownloader, incognitoHtmlDownloader] = htmlDownloaders;
+    const openRouterSettings = new OpenRouterSettingsStore(
+      path.join(app.getPath('userData'), 'openrouter-settings.bin'),
+    );
 
     // init the job scanner
     jobScanner = new JobScanner({
@@ -267,10 +271,19 @@ async function bootstrap() {
       incognitoHtmlDownloader,
       onNavigate: navigate,
       analytics,
+      openRouterSettings,
     });
 
     // init the renderer IPC API
-    initRendererIpcApi({ supabaseApi, jobScanner, autoUpdater, overlayBrowserView, nodeEnv: ENV.nodeEnv, analytics });
+    initRendererIpcApi({
+      supabaseApi,
+      jobScanner,
+      autoUpdater,
+      overlayBrowserView,
+      openRouterSettings,
+      nodeEnv: ENV.nodeEnv,
+      analytics,
+    });
 
     // init the tray menu
     trayMenu = new TrayMenu({ logger, onQuit: quit, onNavigate: navigate });
@@ -319,8 +332,7 @@ async function bootstrap() {
       const { error } = await supabase.auth.setSession(session);
       if (error) throw error;
 
-      // perform an initial scan
-      jobScanner.scanAllLinks().catch((error) => {
+      jobScanner.scanDueLinks().catch((error) => {
         logger.error(getExceptionMessage(error));
       });
     } else {

@@ -33,25 +33,28 @@ Deno.serve(async (req) => {
       areEmailAlertsEnabled: boolean;
     } = await req.json();
 
-    const mailer = new MailersendMailer(
-      env.mailerSendApiKey ?? throwError('Mailersend API key is missing'),
-      'support@careeros.local',
-      'CareerOS',
-    );
+    let mailer: IMailer | undefined;
+    const getMailer = (): IMailer => {
+      mailer ??= new MailersendMailer(
+        env.mailerSendApiKey?.trim() || throwError('MAILERSEND_API_KEY is missing'),
+        Deno.env.get('MAILERSEND_FROM_ADDRESS')?.trim() || throwError('MAILERSEND_FROM_ADDRESS is missing'),
+        'CareerOS',
+      );
+      return mailer;
+    };
 
     logger.info(`running post scan hook ${JSON.stringify(body)}  ...`);
 
     // check for broken links and send out emails
     const { areEmailAlertsEnabled, newJobIds } = body;
-    await checkBrokenLinks({ context, mailer });
+    await checkBrokenLinks({ context, getMailer });
 
     // send out email for new job links
     await sendNewJobLinksEmail({
       newJobIds,
       areEmailAlertsEnabled,
       context,
-      mailer,
-      webappUrl: env.webappUrl,
+      getMailer,
     });
 
     logger.info('finished running post scan hook');
@@ -73,7 +76,13 @@ Deno.serve(async (req) => {
  * Method used to check if any links of the current user are in a warning state
  * and send out an email to the user if they are.
  */
-async function checkBrokenLinks({ context, mailer }: { context: EdgeFunctionAuthorizedContext; mailer: IMailer }) {
+async function checkBrokenLinks({
+  context,
+  getMailer,
+}: {
+  context: EdgeFunctionAuthorizedContext;
+  getMailer: () => IMailer;
+}) {
   const { logger, supabaseClient, user } = context;
 
   if (!user.email) {
@@ -82,7 +91,7 @@ async function checkBrokenLinks({ context, mailer }: { context: EdgeFunctionAuth
   }
 
   // load all existing sites
-  const { data: sitesData, error: sitesError } = await supabaseClient.from('sites').select('*');
+  const { data: sitesData, error: sitesError } = await supabaseClient.from('discovery_sites').select('*');
   const jobSites: JobSite[] = sitesData ?? [];
   if (sitesError) {
     throw new Error(sitesError.message);
@@ -90,7 +99,7 @@ async function checkBrokenLinks({ context, mailer }: { context: EdgeFunctionAuth
 
   const failureThreshold = 3;
   const { data: links, error: listLinksError } = await supabaseClient
-    .from('links')
+    .from('discovery_links')
     .select('*')
     .gte('scrape_failure_count', failureThreshold)
     .eq('scrape_failure_email_sent', false);
@@ -110,7 +119,7 @@ async function checkBrokenLinks({ context, mailer }: { context: EdgeFunctionAuth
     return { title: link.title, site_name: site.name };
   });
   logger.info(`sending email to ${user.email} for ${affectedLinks.length} links: ${JSON.stringify(affectedLinks)}`);
-  await mailer.sendEmail({
+  await getMailer().sendEmail({
     logger,
     to: user.email,
     template: {
@@ -124,7 +133,10 @@ async function checkBrokenLinks({ context, mailer }: { context: EdgeFunctionAuth
 
   // update the links to mark the email as sent
   const linkIds = links.map((link) => link.id);
-  await supabaseClient.from('links').update({ scrape_failure_email_sent: true }).in('id', linkIds);
+  await supabaseClient
+    .from('discovery_links')
+    .update({ scrape_failure_email_sent: true })
+    .in('id', linkIds);
 }
 
 /**
@@ -134,14 +146,12 @@ async function sendNewJobLinksEmail({
   newJobIds,
   areEmailAlertsEnabled,
   context,
-  mailer,
-  webappUrl,
+  getMailer,
 }: {
   newJobIds: number[];
   areEmailAlertsEnabled: boolean;
   context: EdgeFunctionAuthorizedContext;
-  mailer: IMailer;
-  webappUrl: string;
+  getMailer: () => IMailer;
 }) {
   const { logger, supabaseClient, user } = context;
   logger.info(`sending email for new job links ...`);
@@ -161,42 +171,68 @@ async function sendNewJobLinksEmail({
   }
 
   // load the new job list
-  const { data: newJobs, error: newJobsError } = await supabaseClient.from('jobs').select('*').in('id', newJobIds);
+  const { data: newJobs, error: newJobsError } = await supabaseClient
+    .from('discovery_jobs')
+    .select('*')
+    .in('id', newJobIds);
   if (newJobsError) {
     logger.error(`failed to load new jobs: ${getExceptionMessage(newJobsError)}`);
     return;
   }
+  if (!newJobs?.length) {
+    logger.info('no matching new jobs to send email for');
+    return;
+  }
 
   // load sites
-  const { data: sitesData, error: sitesError } = await supabaseClient.from('sites').select('*');
+  const { data: sitesData, error: sitesError } = await supabaseClient.from('discovery_sites').select('*');
   const jobSites: JobSite[] = sitesData ?? [];
   if (sitesError) {
     logger.error(`failed to load sites: ${getExceptionMessage(sitesError)}`);
     return;
   }
   const siteMap = new Map(jobSites.map((site) => [site.id, site]));
+  const alertJobs = newJobs.flatMap((job) => {
+    const sourceUrl = toHttpSourceUrl(job.externalUrl);
+    if (!sourceUrl) return [];
+    return [{
+      providerName: siteMap.get(job.siteId)?.provider ?? 'unknown',
+      title: job.title,
+      url: sourceUrl,
+      description: job.description?.slice(0, 200) ?? '',
+      company: job.companyName,
+      location: job.location,
+    }];
+  });
+  if (alertJobs.length !== newJobs.length) {
+    logger.info(`omitting ${newJobs.length - alertJobs.length} new jobs without a valid http(s) source URL`);
+  }
+  if (alertJobs.length === 0) return;
 
   // send the email
-  logger.info(`sending email to ${user.email} for ${newJobs.length} new jobs ...`);
-  await mailer.sendEmail({
+  logger.info(`sending email to ${user.email} for ${alertJobs.length} new jobs ...`);
+  await getMailer().sendEmail({
     logger,
     to: user.email,
     template: {
       type: EmailTemplateType.newJobAlert,
       templateId: 'pr9084z32r8lw63d',
       payload: {
-        new_jobs_count: newJobs.length,
-        new_jobs: newJobs.map((job) => ({
-          providerName: siteMap.get(job.siteId)?.provider ?? 'unknown',
-          title: job.title,
-          url: `${new URL(`/jobs/${job.id}`, webappUrl).href}`,
-          description: job.description?.slice(0, 200) ?? '',
-          company: job.companyName,
-          location: job.location,
-        })),
+        new_jobs_count: alertJobs.length,
+        new_jobs: alertJobs,
       },
     },
   });
 
   logger.info(`finished sending email for new job links`);
+}
+
+function toHttpSourceUrl(value: unknown): string | undefined {
+  if (typeof value !== 'string') return;
+  try {
+    const url = new URL(value.trim());
+    return (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname ? url.href : undefined;
+  } catch {
+    return;
+  }
 }

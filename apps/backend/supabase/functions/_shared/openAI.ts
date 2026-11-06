@@ -1,6 +1,6 @@
 import { parseEnv } from './env.ts';
 
-import { getExceptionMessage } from '@careeros/core';
+import { OpenRouterModel, getExceptionMessage } from '@careeros/core';
 import { SupabaseClient } from '@supabase/supabasefork';
 import OpenAI from 'openai';
 
@@ -19,12 +19,9 @@ type OpenAIResponse = {
 
 const env = parseEnv();
 
-const SUPPORTED_MODELS = ['deepseek/deepseek-v4-flash', 'deepseek/deepseek-v4-pro'] as const;
-type SupportedModel = (typeof SUPPORTED_MODELS)[number];
-
 // Fallback list-price estimate ($ per 1M tokens). Only used when OpenRouter does
 // not report an actual cost in the usage payload.
-const COST_PER_MODEL: Record<SupportedModel, { input: number; output: number }> = {
+const COST_PER_MODEL: Record<OpenRouterModel, { input: number; output: number }> = {
   'deepseek/deepseek-v4-flash': { input: 0.09, output: 0.18 },
   'deepseek/deepseek-v4-pro': { input: 0.435, output: 0.87 },
 };
@@ -49,9 +46,9 @@ export type OpenRouterConfig = {
 /**
  * Build a new OpenRouter (OpenAI-compatible) client.
  */
-export function buildOpenAiClient({ modelName }: { modelName?: SupportedModel }) {
+export function buildOpenAiClient({ modelName, apiKey }: { modelName?: OpenRouterModel; apiKey?: string }) {
   const openAi = new OpenAI({
-    apiKey: env.openRouterConfig.apiKey,
+    apiKey: apiKey ?? env.openRouterConfig.apiKey,
     baseURL: 'https://openrouter.ai/api/v1',
     defaultHeaders: {
       // Optional attribution headers used by OpenRouter for dashboards/rankings.
@@ -112,7 +109,7 @@ export async function logAiUsage({
   });
 
   // persist the cost of the LLM API call
-  const { error: countUsageError } = await supabaseAdminClient.rpc('log_ai_usage', {
+  const { error: countUsageError } = await supabaseAdminClient.rpc('discovery_log_ai_usage', {
     for_user_id: forUserId,
     cost_increment: cost,
     input_tokens_increment: inputTokensUsed,

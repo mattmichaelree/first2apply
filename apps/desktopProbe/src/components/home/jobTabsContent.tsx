@@ -106,6 +106,7 @@ export function JobTabsContent({
         }
       } catch (error) {
         handleError({ error, title: 'Failed to load jobs' });
+        setListing((listing) => ({ ...listing, isLoading: false }));
       }
     };
     asyncLoad();

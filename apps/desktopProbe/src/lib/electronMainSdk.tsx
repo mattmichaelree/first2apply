@@ -9,6 +9,8 @@ import {
   ListJobsParams,
   ListJobsResult,
   Note,
+  OpenRouterModel,
+  OpenRouterSettingsStatus,
   Profile,
   Review,
   StripeConfig,
@@ -390,6 +392,24 @@ export async function deleteNote(noteId: number): Promise<void> {
  */
 export async function getAdvancedMatchingConfig(): Promise<AdvancedMatchingConfig | null> {
   return await _mainProcessApiCall('get-advanced-matching-config', {});
+}
+
+export async function getOpenRouterSettings(): Promise<OpenRouterSettingsStatus> {
+  return await _mainProcessApiCall('get-openrouter-settings', {});
+}
+
+export async function saveOpenRouterSettings({
+  apiKey,
+  model,
+}: {
+  apiKey?: string;
+  model: OpenRouterModel;
+}): Promise<OpenRouterSettingsStatus> {
+  return await _mainProcessApiCall('save-openrouter-settings', { apiKey, model });
+}
+
+export async function removeOpenRouterSettings(): Promise<OpenRouterSettingsStatus> {
+  return await _mainProcessApiCall('remove-openrouter-settings', {});
 }
 
 /**

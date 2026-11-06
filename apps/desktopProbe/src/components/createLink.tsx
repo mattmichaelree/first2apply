@@ -310,7 +310,7 @@ const JobSearchSubmitDialog = ({
                 {isSubmitting ? (
                   <>
                     <Icons.spinner2 className="h-4 w-4 animate-spin" />
-                    Scanning site...
+                    Saving search...
                   </>
                 ) : errorMessage ? (
                   'Save Anyway'
