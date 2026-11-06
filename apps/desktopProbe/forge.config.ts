@@ -20,6 +20,7 @@ loadEnvVars({ path: path.join(__dirname, '..', 'desktopProbe', '.env') });
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    extraResource: [path.join(__dirname, '.generated', 'job-sweep')],
     icon: path.join(__dirname, 'packagers', 'icons', 'paper-plane'),
     appBundleId: process.env.APP_BUNDLE_ID,
     protocols: [

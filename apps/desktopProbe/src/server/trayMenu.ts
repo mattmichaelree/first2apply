@@ -14,10 +14,12 @@ export class TrayMenu {
     logger,
     onQuit,
     onNavigate,
+    onJobSweepSetup,
   }: {
     logger: ILogger;
     onQuit: () => void;
     onNavigate: (_: { path: string }) => void;
+    onJobSweepSetup: () => void;
   }) {
     this._logger = logger;
     const iconName =
@@ -55,6 +57,11 @@ export class TrayMenu {
         click: () => {
           onNavigate({ path: '/settings' });
         },
+      },
+      {
+        label: 'Job Sweep setup',
+        type: 'normal',
+        click: () => onJobSweepSetup(),
       },
       { type: 'separator' },
       {

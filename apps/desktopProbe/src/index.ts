@@ -11,11 +11,12 @@ import path from 'path';
 
 import { AmplitudeAnalyticsClient } from './server/amplitude';
 import { CareerOsAutoUpdater } from './server/autoUpdater';
-import { isCareerOsWebNavigation, loadCareerOsWebHost } from './server/careerosWebHost';
 import { ensureCareerOsRuntime } from './server/careerOsRuntime';
+import { isCareerOsWebNavigation, loadCareerOsWebHost } from './server/careerosWebHost';
 import { promiseAllSequence } from './server/helpers';
 import { HtmlDownloader } from './server/htmlDownloader';
 import { JobScanner } from './server/jobScanner';
+import { EXPECTED_JOB_SWEEP_EXTENSION_ID, resolveCanonicalJobSweepDirectory } from './server/jobSweepPackage';
 import { logger } from './server/logger';
 import { OverlayBrowserView } from './server/overlayBrowserView';
 import { initRendererIpcApi } from './server/rendererIpcApi';
@@ -33,11 +34,13 @@ if (require('electron-squirrel-startup')) {
 }
 
 const APP_PROTOCOL = 'careeros';
+const JOB_SWEEP_ONBOARDING_VERSION = 1;
 const careerOsWebUrl = ENV.careerOsWebUrl;
 let appIsRunning = false;
 const storage = new Storage<{
   width: number;
   height: number;
+  jobSweepOnboardingVersion?: number;
 }>({ defaults: { width: 1024, height: 800 } });
 
 // register the custom protocol
@@ -51,6 +54,53 @@ if (process.defaultApp) {
 
 let mainWindow: BrowserWindow | null = null;
 let trayIconNotificationShown = false;
+
+async function showJobSweepOnboarding() {
+  const discovery = resolveCanonicalJobSweepDirectory({
+    explicitDirectory: ENV.jobSweepChromeDirectory,
+    resourcesPath: process.resourcesPath,
+    appPath: app.getAppPath(),
+    homeDirectory: os.homedir(),
+  });
+
+  if (!discovery.directory) {
+    const rejected = discovery.rejectedPaths
+      .slice(0, 3)
+      .map(({ directory, reason }) => `${directory}: ${reason}`)
+      .join('\n');
+    await dialog.showMessageBox({
+      type: 'warning',
+      title: 'Job Sweep package not found',
+      message: 'CareerOS could not locate the canonical Job Sweep extension.',
+      detail: `Set JOB_SWEEP_CHROME_DIR to the canonical job-sweep\\extension\\chrome folder, then reopen setup.${rejected ? `\n\nRejected package:\n${rejected}` : ''}`,
+      buttons: ['Close'],
+    });
+    return;
+  }
+
+  const result = await dialog.showMessageBox({
+    type: 'info',
+    title: 'Connect Job Sweep to CareerOS',
+    message: 'Add the included Job Sweep extension to Chrome.',
+    detail: [
+      '1. In Chrome, open chrome://extensions and turn on Developer mode.',
+      '2. Choose Load unpacked, then select the Job Sweep folder shown by CareerOS.',
+      '3. Open Job Sweep Manager, turn on Use CareerOS, and choose Connect.',
+      '',
+      'CareerOS pairs locally. You will never be asked to copy or paste a bearer token.',
+      `Extension ID: ${EXPECTED_JOB_SWEEP_EXTENSION_ID}`,
+    ].join('\n'),
+    buttons: ['Show Job Sweep folder', "I've connected it", 'Not now'],
+    defaultId: 0,
+    cancelId: 2,
+  });
+
+  if (result.response === 0) {
+    shell.showItemInFolder(path.join(discovery.directory, 'manifest.json'));
+  } else if (result.response === 1) {
+    storage.set('jobSweepOnboardingVersion', JOB_SWEEP_ONBOARDING_VERSION);
+  }
+}
 
 const createMainWindow = () => {
   // Create the browser window.
@@ -298,7 +348,21 @@ async function bootstrap() {
     initRendererIpcApi({ supabaseApi, jobScanner, autoUpdater, overlayBrowserView, nodeEnv: ENV.nodeEnv, analytics });
 
     // init the tray menu
-    trayMenu = new TrayMenu({ logger, onQuit: quit, onNavigate: navigate });
+    trayMenu = new TrayMenu({
+      logger,
+      onQuit: quit,
+      onNavigate: navigate,
+      onJobSweepSetup: () => {
+        void showJobSweepOnboarding();
+      },
+    });
+
+    if (
+      careerOsRuntime.status === 'ready' &&
+      storage.get('jobSweepOnboardingVersion') !== JOB_SWEEP_ONBOARDING_VERSION
+    ) {
+      void showJobSweepOnboarding();
+    }
 
     const userDataPath = app.getPath('userData');
     const sessionPath = path.join(userDataPath, `${ENV.nodeEnv}-encrypted-session.json`);

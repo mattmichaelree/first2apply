@@ -25,6 +25,7 @@ export const ENV = {
   careerOsAutostart: getCareerOsAutostart(),
   careerOsJobsDirectory: process.env.CAREEROS_JOBS_DIR?.trim() || undefined,
   careerOsWebUrl: getCareerOsWebUrl(process.env.CAREEROS_WEB_URL ?? DEFAULT_CAREEROS_WEB_URL),
+  jobSweepChromeDirectory: process.env.JOB_SWEEP_CHROME_DIR?.trim() || undefined,
   supabase: {
     url: process.env.SUPABASE_URL,
     key: process.env.SUPABASE_KEY,

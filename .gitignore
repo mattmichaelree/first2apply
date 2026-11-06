@@ -128,6 +128,7 @@ test.html
 
 # compiled output
 build/
+apps/desktopProbe/.generated/
 
 # nx
 .nx/installation

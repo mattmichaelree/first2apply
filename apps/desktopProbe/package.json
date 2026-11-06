@@ -12,8 +12,9 @@
     "build": "tsc --noEmit",
     "test": "jest --config ./jest.config.ts --verbose",
     "prettier": "prettier --check \"src/**/*.{ts,tsx}\"",
-    "package": "electron-forge package",
-    "make": "electron-forge make --arch x64",
+    "stage:job-sweep": "node -r ts-node/register scripts/stage-job-sweep.ts",
+    "package": "node -r ts-node/register scripts/stage-job-sweep.ts && node -r ts-node/register scripts/run-electron-forge.ts package",
+    "make": "node -r ts-node/register scripts/stage-job-sweep.ts && node -r ts-node/register scripts/run-electron-forge.ts make --arch x64",
     "release": "npx release-it --ci"
   },
   "keywords": [],
