@@ -3,7 +3,7 @@ import { ENV } from './env';
 import { DbSchema, getExceptionMessage } from '@careeros/core';
 import { CareerOsSupabaseApi } from '@careeros/ui';
 import { createClient } from '@supabase/supabase-js';
-import { BrowserWindow, Notification, app, dialog, nativeTheme, safeStorage, shell } from 'electron';
+import { BrowserWindow, Notification, app, dialog, ipcMain, nativeTheme, safeStorage, shell } from 'electron';
 import Storage from 'electron-store';
 import fs from 'fs';
 import os from 'os';
@@ -19,6 +19,8 @@ import { JobScanner } from './server/jobScanner';
 import { EXPECTED_JOB_SWEEP_EXTENSION_ID, resolveCanonicalJobSweepDirectory } from './server/jobSweepPackage';
 import { logger } from './server/logger';
 import { OverlayBrowserView } from './server/overlayBrowserView';
+import { initProviderCredentialIpc } from './server/providerCredentialIpc';
+import { ProviderCredentialStore } from './server/providerCredentials';
 import { initRendererIpcApi } from './server/rendererIpcApi';
 import { TrayMenu } from './server/trayMenu';
 
@@ -27,6 +29,8 @@ import { TrayMenu } from './server/trayMenu';
 // whether you're running in development or production).
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
+declare const PROVIDER_SETTINGS_WINDOW_WEBPACK_ENTRY: string;
+declare const PROVIDER_SETTINGS_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -53,6 +57,8 @@ if (process.defaultApp) {
 }
 
 let mainWindow: BrowserWindow | null = null;
+let providerSettingsWindow: BrowserWindow | null = null;
+let providerCredentialStore: ProviderCredentialStore | null = null;
 let trayIconNotificationShown = false;
 
 async function showJobSweepOnboarding() {
@@ -157,6 +163,42 @@ const createMainWindow = () => {
 
   return mainWindow;
 };
+
+function showProviderCredentialSettings() {
+  if (providerSettingsWindow && !providerSettingsWindow.isDestroyed()) {
+    providerSettingsWindow.show();
+    providerSettingsWindow.focus();
+    return;
+  }
+
+  providerSettingsWindow = new BrowserWindow({
+    width: 980,
+    height: 820,
+    minWidth: 640,
+    minHeight: 560,
+    parent: mainWindow ?? undefined,
+    title: 'Local provider credentials · CareerOS',
+    autoHideMenuBar: true,
+    webPreferences: {
+      preload: PROVIDER_SETTINGS_WINDOW_PRELOAD_WEBPACK_ENTRY,
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      partition: 'provider-credentials-ephemeral',
+      spellcheck: false,
+    },
+  });
+  providerSettingsWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  providerSettingsWindow.webContents.on('will-navigate', (event, url) => {
+    if (url !== PROVIDER_SETTINGS_WINDOW_WEBPACK_ENTRY) event.preventDefault();
+  });
+  providerSettingsWindow.on('closed', () => {
+    providerSettingsWindow = null;
+  });
+  void providerSettingsWindow.loadURL(PROVIDER_SETTINGS_WINDOW_WEBPACK_ENTRY).catch((error) => {
+    logger.error(`failed to load local provider settings window: ${getExceptionMessage(error)}`);
+  });
+}
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -298,11 +340,26 @@ async function bootstrap() {
       app.setAppUserModelId(ENV.appBundleId);
     }
 
+    providerCredentialStore = new ProviderCredentialStore({
+      directory: path.join(app.getPath('userData'), 'provider-credentials'),
+      protectedStorage: safeStorage,
+      audit: (event) => logger.info('Local provider credential changed', event),
+    });
+    initProviderCredentialIpc({
+      registrar: ipcMain,
+      store: providerCredentialStore,
+      isAllowedSender: (event) => {
+        const senderId = (event as { sender?: { id?: number } }).sender?.id;
+        return Boolean(providerSettingsWindow && senderId === providerSettingsWindow.webContents.id);
+      },
+    });
+
     const careerOsRuntime = await ensureCareerOsRuntime({
       autostart: ENV.careerOsAutostart,
       explicitDirectory: ENV.careerOsJobsDirectory,
       appPath: app.getAppPath(),
       homeDirectory: os.homedir(),
+      providerEnvironment: providerCredentialStore.getEnvironment(),
     });
     logger.info(`CareerOS runtime ${careerOsRuntime.action}`, {
       status: careerOsRuntime.status,
@@ -355,6 +412,7 @@ async function bootstrap() {
       onJobSweepSetup: () => {
         void showJobSweepOnboarding();
       },
+      onProviderCredentialSettings: showProviderCredentialSettings,
     });
 
     if (
@@ -451,6 +509,10 @@ async function quit() {
 
     trayMenu?.close();
     logger.info(`closed tray menu`);
+
+    providerSettingsWindow?.destroy();
+    providerSettingsWindow = null;
+    logger.info(`closed provider settings window`);
 
     autoUpdater.stop();
     logger.info(`stopped auto updater`);

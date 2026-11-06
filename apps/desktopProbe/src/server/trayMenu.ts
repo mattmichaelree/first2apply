@@ -15,11 +15,13 @@ export class TrayMenu {
     onQuit,
     onNavigate,
     onJobSweepSetup,
+    onProviderCredentialSettings,
   }: {
     logger: ILogger;
     onQuit: () => void;
     onNavigate: (_: { path: string }) => void;
     onJobSweepSetup: () => void;
+    onProviderCredentialSettings: () => void;
   }) {
     this._logger = logger;
     const iconName =
@@ -62,6 +64,11 @@ export class TrayMenu {
         label: 'Job Sweep setup',
         type: 'normal',
         click: () => onJobSweepSetup(),
+      },
+      {
+        label: 'Local provider credentials',
+        type: 'normal',
+        click: () => onProviderCredentialSettings(),
       },
       { type: 'separator' },
       {

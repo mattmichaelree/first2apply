@@ -6,6 +6,7 @@ import path from 'path';
 import {
   CAREEROS_API_READY_URL,
   CAREEROS_WEB_URL,
+  buildCareerOsChildEnvironment,
   checkCareerOsHealth,
   ensureCareerOsRuntime,
   resolveCareerOsRuntimeDirectory,
@@ -70,6 +71,21 @@ describe('CareerOS runtime discovery', () => {
   });
 });
 
+describe('CareerOS child-process environment', () => {
+  it('removes inherited provider credentials and injects only the selected protected values', () => {
+    expect(
+      buildCareerOsChildEnvironment(
+        {
+          PATH: 'C:\\tools',
+          CAREEROS_JOBS_APIFY_API_TOKEN: 'inherited-must-not-leak',
+          CAREEROS_JOBS_EXA_API_KEY: 'inherited-must-not-leak',
+        },
+        { CAREEROS_JOBS_EXA_API_KEY: 'selected-exa' },
+      ),
+    ).toEqual({ PATH: 'C:\\tools', CAREEROS_JOBS_EXA_API_KEY: 'selected-exa' });
+  });
+});
+
 describe('CareerOS runtime health', () => {
   it('requires the CareerOS ready payload and the web app', async () => {
     const fetchFn = jest.fn(async (url: string | URL | Request) => {
@@ -110,6 +126,7 @@ describe('CareerOS runtime health', () => {
     const runLauncher = jest.fn(async () => {
       started = true;
     });
+    const providerEnvironment = { CAREEROS_JOBS_APIFY_API_TOKEN: 'selected-apify' };
     const fetchFn = jest.fn(async (url: string | URL | Request) => {
       if (!started) throw new Error('ECONNREFUSED');
       return String(url) === CAREEROS_API_READY_URL ? jsonResponse(200, { status: 'ready' }) : jsonResponse(200, {});
@@ -121,6 +138,7 @@ describe('CareerOS runtime health', () => {
         explicitDirectory: runtime,
         fetchFn,
         runLauncher,
+        providerEnvironment,
         appPath: createTemporaryDirectory(),
         homeDirectory: createTemporaryDirectory(),
       }),
@@ -128,6 +146,7 @@ describe('CareerOS runtime health', () => {
     expect(runLauncher).toHaveBeenCalledWith(
       path.join(fs.realpathSync(runtime), 'scripts', 'start-careeros.ps1'),
       fs.realpathSync(runtime),
+      providerEnvironment,
     );
   });
 

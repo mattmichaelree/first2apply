@@ -116,6 +116,14 @@ const config: ForgeConfig = {
               js: './src/preload.ts',
             },
           },
+          {
+            html: './src/providerSettings.html',
+            js: './src/providerSettingsRenderer.ts',
+            name: 'provider_settings_window',
+            preload: {
+              js: './src/providerSettingsPreload.ts',
+            },
+          },
         ],
       },
       port: 3049,

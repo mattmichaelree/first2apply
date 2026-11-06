@@ -42,7 +42,7 @@ Run the bounded onboarding check with:
 corepack pnpm --filter careeros-desktop smoke:onboarding
 ```
 
-See [CareerOS Desktop local onboarding](./docs/careeros-desktop-onboarding.md) for Chrome installation, health diagnostics, packaging, and rollback.
+See [CareerOS Desktop local onboarding](./docs/careeros-desktop-onboarding.md) for Chrome installation, encrypted local provider credentials, health diagnostics, packaging, recovery, and rollback.
 
 ### 1. Install Dependencies
 
@@ -133,6 +133,7 @@ Update the version in `apps/desktopProbe/package.json` and the `.appx` manifest.
 
 **MacOS:**
 Run the package command:
+
 ```bash
 pnpm nx run first2apply-desktop:package
 # or from the folder
@@ -141,6 +142,7 @@ cd apps/desktopProbe && npm run package
 
 **Windows:**
 Build the AppX bundle:
+
 ```bash
 pnpm nx run first2apply-desktop:make
 # or from the folder
@@ -155,4 +157,5 @@ pnpm run publish
 ```
 
 ### Linux
+
 Manual upload of `.deb` file to S3 and update of `RELEASES.json` is required.

@@ -2,6 +2,8 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
+import { PROVIDER_ENVIRONMENT_KEYS } from './providerCredentials';
+
 export const CAREEROS_API_READY_URL = 'http://127.0.0.1:8001/health/ready';
 export const CAREEROS_WEB_URL = 'http://127.0.0.1:5174/';
 
@@ -40,9 +42,28 @@ export type CareerOsRuntimeResult = {
 
 type EnsureCareerOsRuntimeOptions = RuntimeDirectoryOptions & {
   autostart: boolean;
+  providerEnvironment?: NodeJS.ProcessEnv;
   fetchFn?: FetchFunction;
-  runLauncher?: (scriptPath: string, workingDirectory: string) => Promise<void>;
+  runLauncher?: (
+    scriptPath: string,
+    workingDirectory: string,
+    providerEnvironment?: NodeJS.ProcessEnv,
+  ) => Promise<void>;
 };
+
+export function buildCareerOsChildEnvironment(
+  baseEnvironment: NodeJS.ProcessEnv,
+  providerEnvironment: NodeJS.ProcessEnv,
+) {
+  const environment = Object.fromEntries(
+    Object.entries(baseEnvironment).filter(([key]) => !PROVIDER_ENVIRONMENT_KEYS.has(key)),
+  ) as NodeJS.ProcessEnv;
+  for (const key of PROVIDER_ENVIRONMENT_KEYS) {
+    const value = providerEnvironment[key];
+    if (value) environment[key] = value;
+  }
+  return environment;
+}
 
 function uniquePaths(paths: Array<string | undefined>) {
   const normalized = paths
@@ -113,7 +134,11 @@ export async function checkCareerOsHealth({ fetchFn = fetch }: { fetchFn?: Fetch
   return { api, web, ready: api.ready && web.ready };
 }
 
-export function runCareerOsLauncher(scriptPath: string, workingDirectory: string) {
+export function runCareerOsLauncher(
+  scriptPath: string,
+  workingDirectory: string,
+  providerEnvironment: NodeJS.ProcessEnv = {},
+) {
   return new Promise<void>((resolve, reject) => {
     if (process.platform !== 'win32') {
       reject(new Error('Automatic CareerOS startup currently requires Windows PowerShell.'));
@@ -125,6 +150,7 @@ export function runCareerOsLauncher(scriptPath: string, workingDirectory: string
       ['-NoLogo', '-NoProfile', '-NonInteractive', '-File', scriptPath, '-NoBrowser'],
       {
         cwd: workingDirectory,
+        env: buildCareerOsChildEnvironment(process.env, providerEnvironment),
         shell: false,
         stdio: 'ignore',
         windowsHide: true,
@@ -149,6 +175,7 @@ export function runCareerOsLauncher(scriptPath: string, workingDirectory: string
 
 export async function ensureCareerOsRuntime({
   autostart,
+  providerEnvironment,
   explicitDirectory,
   appPath,
   homeDirectory,
@@ -181,7 +208,11 @@ export async function ensureCareerOsRuntime({
   }
 
   try {
-    await runLauncher(path.join(discovery.directory, 'scripts', 'start-careeros.ps1'), discovery.directory);
+    await runLauncher(
+      path.join(discovery.directory, 'scripts', 'start-careeros.ps1'),
+      discovery.directory,
+      providerEnvironment,
+    );
     const health = await checkCareerOsHealth({ fetchFn });
     if (!health.ready) {
       throw new Error(

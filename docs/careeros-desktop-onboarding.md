@@ -70,6 +70,21 @@ Invoke-RestMethod http://127.0.0.1:8001/health/ready
 
 Startup logs are in `<careeros-jobs>\.runtime\api.out.log`, `api.err.log`, `web.out.log`, and `web.err.log`. Port 8001 is the API; its root returning 404 is normal. Port 5174 is the web app.
 
+## Optional local provider credentials
+
+Open the tray menu and choose **Local provider credentials**. This dedicated local window supports Apify, Apollo, Crunchbase, Exa, Resend, and Gmail OAuth. Every saved field is encrypted through Electron `safeStorage` into a provider-specific binary file under Desktop's `userData\provider-credentials` directory. The window uses an ephemeral renderer partition, receives only configured/redacted status, and never writes credentials to browser storage, plain JSON, API responses, or logs.
+
+Saving or removing a value does not contact the provider and does not enable provider execution. Restart the local CareerOS services so the Desktop launcher can supply only the configured provider environment variables to the new child process. Then open the CareerOS **Providers** workspace and use its explicit **Validate** action. Hosted CareerOS credentials remain deployment secrets; Desktop does not upload or manage them.
+
+If OS protected storage is unavailable, the window explains the failure and refuses to save or inject plaintext. On Linux, Electron's `basic_text` and `unknown` fallback backends are treated as unavailable; a supported Secret Service or KWallet backend is required. Existing encrypted files remain removable.
+
+### Credential recovery and removal
+
+1. Remove one integration with **Local provider credentials → Remove**. Quit and restart the local CareerOS services to clear that provider from the child-process environment.
+2. If a stored value cannot be decrypted after an OS account/keychain change, remove that provider in the same window and add it again. The unreadable ciphertext is never injected.
+3. If the settings window cannot open, quit Desktop, locate Desktop's Electron `userData` directory, and remove only its `provider-credentials` subdirectory. This deletes local provider ciphertext; it does not change hosted deployment secrets or CareerOS records.
+4. Reopen Desktop and add only the providers needed locally. Encrypted credential files are tied to the OS protection context and should not be copied between machines or OS accounts.
+
 ## Package verification
 
 Desktop packaging stages the canonical extension into the app resources before Electron Forge runs:
@@ -108,6 +123,7 @@ Rollback is local and does not change CareerOS data or the canonical Job Sweep s
    ```
 
    Recreate them at any time with `corepack pnpm --filter careeros-desktop stage:job-sweep`.
+
 5. To restore normal behavior, remove the two process overrides and restart Desktop:
 
    ```powershell
