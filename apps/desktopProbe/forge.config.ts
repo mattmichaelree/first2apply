@@ -9,8 +9,10 @@ import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
 import { WebpackPlugin } from '@electron-forge/plugin-webpack';
 import type { ForgeConfig } from '@electron-forge/shared-types';
+import fs from 'fs';
 import path from 'path';
 
+import { getJobSweepPackageResources } from './src/server/jobSweepExtension';
 import { mainConfig } from './webpack.main.config';
 import { rendererConfig } from './webpack.renderer.config';
 
@@ -20,6 +22,10 @@ loadEnvVars({ path: path.join(__dirname, '..', 'desktopProbe', '.env') });
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    extraResource: getJobSweepPackageResources({
+      desktopRoot: __dirname,
+      manifestExists: fs.existsSync,
+    }),
     icon: path.join(__dirname, 'packagers', 'icons', 'paper-plane'),
     appBundleId: process.env.APP_BUNDLE_ID,
     protocols: [

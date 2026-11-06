@@ -1,4 +1,7 @@
+import path from 'path';
+
 export const JOB_SWEEP_EXTENSION_ID = 'jgpidoojnckcjkpefbjhpiagfniemena';
+export const JOB_SWEEP_PACKAGED_DIRECTORY = 'job-sweep-chrome';
 
 type ExtensionInfo = {
   id: string;
@@ -12,32 +15,63 @@ type JobSweepExtensionResult =
   | { status: 'unavailable'; error: unknown };
 
 type JobSweepExtensionOptions = {
-  extensionPath: string | undefined;
+  extensionPaths: readonly (string | undefined)[];
   manifestExists: (extensionPath: string) => boolean;
   loadExtension: (extensionPath: string) => Promise<ExtensionInfo>;
   removeExtension: (extensionId: string) => void;
   onFailure: (error: unknown) => void;
 };
 
+type JobSweepExtensionPathsOptions = {
+  configuredPath: string | undefined;
+  resourcesPath: string;
+  appPath: string;
+};
+
+type JobSweepPackageResourcesOptions = {
+  desktopRoot: string;
+  manifestExists: (manifestPath: string) => boolean;
+};
+
+function getJobSweepRepositoryPath(desktopRoot: string) {
+  return path.resolve(desktopRoot, '..', '..', '..', 'job-sweep');
+}
+
+export function getJobSweepExtensionPaths({ configuredPath, resourcesPath, appPath }: JobSweepExtensionPathsOptions) {
+  return [
+    configuredPath?.trim() || undefined,
+    path.join(resourcesPath, JOB_SWEEP_PACKAGED_DIRECTORY),
+    path.join(getJobSweepRepositoryPath(appPath), 'dist', 'bundles', 'chrome'),
+  ];
+}
+
+export function getJobSweepPackageResources({ desktopRoot, manifestExists }: JobSweepPackageResourcesOptions) {
+  const bundlePath = path.join(getJobSweepRepositoryPath(desktopRoot), 'dist', JOB_SWEEP_PACKAGED_DIRECTORY);
+  return manifestExists(path.join(bundlePath, 'manifest.json')) ? [bundlePath] : [];
+}
+
 /** Load only the unpacked Job Sweep bundle with the allowlisted stable ID. */
 export async function loadJobSweepExtension({
-  extensionPath,
+  extensionPaths,
   manifestExists,
   loadExtension,
   removeExtension,
   onFailure,
 }: JobSweepExtensionOptions): Promise<JobSweepExtensionResult> {
-  const configuredPath = extensionPath?.trim();
-  if (!configuredPath) return { status: 'not_configured' };
+  const candidatePaths = extensionPaths
+    .map((extensionPath) => extensionPath?.trim())
+    .filter((extensionPath): extensionPath is string => Boolean(extensionPath));
+  if (candidatePaths.length === 0) return { status: 'not_configured' };
 
   try {
-    if (!manifestExists(configuredPath)) {
-      throw new Error(`Job Sweep manifest not found at configured extension path`);
+    const extensionPath = candidatePaths.find(manifestExists);
+    if (!extensionPath) {
+      throw new Error(`Job Sweep manifest not found at any supported extension path`);
     }
-    const extension = await loadExtension(configuredPath);
+    const extension = await loadExtension(extensionPath);
     if (extension.id !== JOB_SWEEP_EXTENSION_ID) {
       removeExtension(extension.id);
-      throw new Error(`Configured extension did not match the allowlisted Job Sweep ID`);
+      throw new Error(`Selected extension did not match the allowlisted Job Sweep ID`);
     }
     return { status: 'loaded', extension };
   } catch (error) {

@@ -13,8 +13,8 @@ import { CareerOsAutoUpdater } from './server/autoUpdater';
 import { isCareerOsWebNavigation, loadCareerOsWebHost } from './server/careerosWebHost';
 import { promiseAllSequence } from './server/helpers';
 import { HtmlDownloader } from './server/htmlDownloader';
-import { loadJobSweepExtension } from './server/jobSweepExtension';
 import { JobScanner } from './server/jobScanner';
+import { getJobSweepExtensionPaths, loadJobSweepExtension } from './server/jobSweepExtension';
 import { logger } from './server/logger';
 import { OpenRouterSettingsStore } from './server/openRouterSettings';
 import { OverlayBrowserView } from './server/overlayBrowserView';
@@ -253,7 +253,11 @@ async function bootstrap() {
     overlayBrowserView.setMainWindow(mainWindow);
 
     const jobSweepResult = await loadJobSweepExtension({
-      extensionPath: ENV.jobSweepExtensionPath,
+      extensionPaths: getJobSweepExtensionPaths({
+        configuredPath: ENV.jobSweepExtensionPath,
+        resourcesPath: process.resourcesPath,
+        appPath: app.getAppPath(),
+      }),
       manifestExists: (extensionPath) => fs.existsSync(path.join(extensionPath, 'manifest.json')),
       loadExtension: (extensionPath) =>
         mainWindow.webContents.session.extensions.loadExtension(extensionPath),
