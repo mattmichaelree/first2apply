@@ -58,6 +58,41 @@ describe('Job Sweep desktop extension loader', () => {
     expect(loadedPaths).toEqual(['C:\\resources\\job-sweep-chrome']);
   });
 
+  it('reconciles an existing allowlisted extension before loading the local bundle again', async () => {
+    const extension = { id: JOB_SWEEP_EXTENSION_ID, name: 'Job Sweep', version: '8.3.0' };
+    const loadedExtensionIds = new Set<string>([JOB_SWEEP_EXTENSION_ID]);
+    const removeExtension = jest.fn((extensionId: string) => loadedExtensionIds.delete(extensionId));
+    const loadExtension = jest.fn(async () => {
+      if (loadedExtensionIds.has(JOB_SWEEP_EXTENSION_ID)) {
+        throw new Error('Extension already loaded');
+      }
+      loadedExtensionIds.add(JOB_SWEEP_EXTENSION_ID);
+      return extension;
+    });
+
+    const first = await loadJobSweepExtension({
+      extensionPaths: ['C:\\resources\\job-sweep-chrome'],
+      manifestExists: () => true,
+      getLoadedExtensions: () => (loadedExtensionIds.has(JOB_SWEEP_EXTENSION_ID) ? [extension] : []),
+      loadExtension,
+      removeExtension,
+      onFailure: jest.fn(),
+    });
+    const second = await loadJobSweepExtension({
+      extensionPaths: ['C:\\resources\\job-sweep-chrome'],
+      manifestExists: () => true,
+      getLoadedExtensions: () => (loadedExtensionIds.has(JOB_SWEEP_EXTENSION_ID) ? [extension] : []),
+      loadExtension,
+      removeExtension,
+      onFailure: jest.fn(),
+    });
+
+    expect(first).toEqual({ status: 'loaded', extension });
+    expect(second).toEqual({ status: 'loaded', extension });
+    expect(removeExtension).toHaveBeenCalledTimes(2);
+    expect(loadExtension).toHaveBeenCalledTimes(2);
+  });
+
   it('unloads and rejects a bundle with an unexpected extension id', async () => {
     const removeExtension = jest.fn();
     const onFailure = jest.fn();

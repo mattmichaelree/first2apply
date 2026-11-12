@@ -17,6 +17,7 @@ type JobSweepExtensionResult =
 type JobSweepExtensionOptions = {
   extensionPaths: readonly (string | undefined)[];
   manifestExists: (extensionPath: string) => boolean;
+  getLoadedExtensions?: () => readonly ExtensionInfo[];
   loadExtension: (extensionPath: string) => Promise<ExtensionInfo>;
   removeExtension: (extensionId: string) => void;
   onFailure: (error: unknown) => void;
@@ -54,6 +55,7 @@ export function getJobSweepPackageResources({ desktopRoot, manifestExists }: Job
 export async function loadJobSweepExtension({
   extensionPaths,
   manifestExists,
+  getLoadedExtensions,
   loadExtension,
   removeExtension,
   onFailure,
@@ -67,6 +69,10 @@ export async function loadJobSweepExtension({
     const extensionPath = candidatePaths.find(manifestExists);
     if (!extensionPath) {
       throw new Error(`Job Sweep manifest not found at any supported extension path`);
+    }
+    const installedExtension = getLoadedExtensions?.().find((extension) => extension.id === JOB_SWEEP_EXTENSION_ID);
+    if (installedExtension) {
+      removeExtension(installedExtension.id);
     }
     const extension = await loadExtension(extensionPath);
     if (extension.id !== JOB_SWEEP_EXTENSION_ID) {

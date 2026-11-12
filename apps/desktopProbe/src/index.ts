@@ -259,6 +259,7 @@ async function bootstrap() {
         appPath: app.getAppPath(),
       }),
       manifestExists: (extensionPath) => fs.existsSync(path.join(extensionPath, 'manifest.json')),
+      getLoadedExtensions: () => mainWindow.webContents.session.extensions.getAllExtensions(),
       loadExtension: (extensionPath) =>
         mainWindow.webContents.session.extensions.loadExtension(extensionPath),
       removeExtension: (extensionId) =>
