@@ -1,10 +1,18 @@
-import { AdvancedMatchingConfig, DbSchema, getExceptionMessage, Job, JobStatus, throwError } from '@first2apply/core';
+import {
+  AdvancedMatchingConfig,
+  DbSchema,
+  Job,
+  JobStatus,
+  OpenRouterRequestConfig,
+  getExceptionMessage,
+  throwError,
+} from '@careeros/core';
 import { SupabaseClient } from '@supabase/supabasefork';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 
 import { ILogger } from './logger.ts';
-import { buildOpenAiClient, logAiUsage, OPENROUTER_ROUTING } from './openAI.ts';
+import { OPENROUTER_ROUTING, buildOpenAiClient, logAiUsage } from './openAI.ts';
 import { checkUserSubscription } from './subscription.ts';
 
 /**
@@ -16,11 +24,13 @@ export async function applyAdvancedMatchingFilters({
   supabaseClient,
   supabaseAdminClient,
   job,
+  openRouter,
 }: {
   logger: ILogger;
   supabaseClient: SupabaseClient<DbSchema, 'public'>;
   supabaseAdminClient: SupabaseClient<DbSchema, 'public'>;
   job: Job;
+  openRouter?: OpenRouterRequestConfig;
 }): Promise<{ newStatus: JobStatus; excludeReason?: string }> {
   logger.info(`applying advanced matching filters to job ${job.id} ...`);
   // check if the user has advanced matching enabled
@@ -35,7 +45,7 @@ export async function applyAdvancedMatchingFilters({
 
   // load the advanced matching config for this user
   const { data: advancedMatchingArr, error: getAdvancedMatchingErr } = await supabaseClient
-    .from('advanced_matching')
+    .from('discovery_advanced_matching')
     .select('*')
     .eq('user_id', job.user_id);
   if (getAdvancedMatchingErr) {
@@ -66,6 +76,7 @@ export async function applyAdvancedMatchingFilters({
         job,
         logger,
         supabaseAdminClient,
+        openRouter,
       });
 
       if (exclusionDecision.excluded) {
@@ -110,14 +121,17 @@ async function promptOpenAI({
 
   logger,
   supabaseAdminClient,
+  openRouter,
 }: {
   job: Job;
   prompt: string;
   logger: ILogger;
   supabaseAdminClient: SupabaseClient<DbSchema, 'public'>;
+  openRouter?: OpenRouterRequestConfig;
 }) {
   const { llmConfig, openAi } = buildOpenAiClient({
-    modelName: 'deepseek/deepseek-v4-pro',
+    modelName: openRouter?.model,
+    apiKey: openRouter?.apiKey,
   });
 
   const response = await openAi.chat.completions.create({

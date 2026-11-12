@@ -18,7 +18,7 @@ import {
   JobLabel,
   JobStatus,
   getRelativeTimeString,
-} from "@first2apply/core"
+} from "@careeros/core"
 import { useSites } from "../../hooks/useSites"
 import { useLinks } from "../../hooks/useLinks"
 import { Avatar, AvatarImage } from "../ui/avatar"

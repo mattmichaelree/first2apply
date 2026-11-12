@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useError } from '@/hooks/error';
 import { changeAllJobsStatus, exportJobsToCsv } from '@/lib/electronMainSdk';
-import { Job, JobStatus } from '@first2apply/core';
+import { Job, JobStatus } from '@careeros/core';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,16 +14,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@first2apply/ui';
+} from '@careeros/ui';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@first2apply/ui';
-import { Tabs, TabsList, TabsTrigger } from '@first2apply/ui';
-import { toast } from '@first2apply/ui';
+} from '@careeros/ui';
+import { Tabs, TabsList, TabsTrigger } from '@careeros/ui';
+import { toast } from '@careeros/ui';
 
 import { JobTabsContent } from './jobTabsContent';
 

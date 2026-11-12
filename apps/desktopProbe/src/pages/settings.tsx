@@ -1,4 +1,4 @@
-import { CronSchedule } from '@/components/cronSchedule';
+import { BoardSchedules, CronSchedule } from '@/components/cronSchedule';
 import { SettingsSkeleton } from '@/components/skeletons/SettingsSkeleton';
 import { useAppState } from '@/hooks/appState';
 import { useError } from '@/hooks/error';
@@ -6,8 +6,9 @@ import { useSession } from '@/hooks/session';
 import { useSettings } from '@/hooks/settings';
 import { applyAppUpdate, logout, openExternalUrl } from '@/lib/electronMainSdk';
 import { JobScannerSettings } from '@/lib/types';
-import { Button } from '@first2apply/ui';
-import { Switch } from '@first2apply/ui';
+import { SiteProvider } from '@careeros/core';
+import { Button, useLinks, useSites } from '@careeros/ui';
+import { Switch } from '@careeros/ui';
 import * as luxon from 'luxon';
 
 import { DefaultLayout } from './defaultLayout';
@@ -16,10 +17,16 @@ export function SettingsPage() {
   const { handleError } = useError();
   const { isLoading: isLoadingSession, logout: resetUser, user, profile, stripeConfig } = useSession();
   const { isLoading: isLoadingSettings, settings, updateSettings } = useSettings();
+  const { isLoading: isLoadingLinks, links } = useLinks();
+  const { isLoading: isLoadingSites, sites } = useSites();
   const { newUpdate } = useAppState();
 
-  const isLoading = !profile || !stripeConfig || isLoadingSettings || isLoadingSession;
+  const isLoading = !stripeConfig || isLoadingSettings || isLoadingSession || isLoadingLinks || isLoadingSites;
   const hasNewUpdate = !!newUpdate;
+  const activeSiteIds = new Set(links.map((link) => link.site_id));
+  const configurableSites = sites.filter(
+    (site) => !site.deprecated && (site.provider === SiteProvider.linkedin || activeSiteIds.has(site.id)),
+  );
 
   // Update settings
   const onUpdatedSettings = async (newSettings: JobScannerSettings) => {
@@ -47,6 +54,17 @@ export function SettingsPage() {
       await updateSettings(newSettings);
     } catch (error) {
       handleError({ error, title: 'Failed to update notification frequency' });
+    }
+  };
+
+  const onSiteCronRuleChange = async (provider: SiteProvider, cronRule: string | null | undefined) => {
+    try {
+      const siteCronRules = { ...settings.siteCronRules };
+      if (cronRule === undefined) delete siteCronRules[provider];
+      else siteCronRules[provider] = cronRule;
+      await updateSettings({ ...settings, siteCronRules });
+    } catch (error) {
+      handleError({ error, title: 'Failed to update job board frequency' });
     }
   };
 
@@ -79,7 +97,7 @@ export function SettingsPage() {
             </h2>
             <p className="text-sm font-light">{newUpdate.message}</p>
           </div>
-          {!profile.is_trial && (
+          {profile && !profile.is_trial && (
             <Button className="w-fit" onClick={() => onApplyUpdate()}>
               Update
             </Button>
@@ -90,11 +108,17 @@ export function SettingsPage() {
       {/* cron settings */}
       <CronSchedule cronRule={settings.cronRule} onCronRuleChange={onCronRuleChange} />
 
+      <BoardSchedules
+        sites={configurableSites}
+        siteCronRules={settings.siteCronRules}
+        onSiteCronRuleChange={onSiteCronRuleChange}
+      />
+
       {/* sleep settings */}
       <div className="flex flex-row items-center justify-between gap-6 rounded-lg border p-6">
         <div className="space-y-1">
           <h2 className="text-lg">Prevent computer from entering sleep</h2>
-          <p className="text-sm font-light">First2Apply needs to run in the background to notify you of new jobs</p>
+          <p className="text-sm font-light">CareerOS needs to run in the background to notify you of new jobs</p>
         </div>
         <Switch
           checked={settings.preventSleep}
@@ -139,30 +163,39 @@ export function SettingsPage() {
       </div>
 
       {/* subscription */}
-      <div className="flex flex-row items-center justify-between gap-6 rounded-lg border p-6">
-        <div className="space-y-1">
-          <h2 className="text-lg">
-            {profile.subscription_tier.toUpperCase()} subscription
-            {profile.is_trial && ' (Trial)'}
-          </h2>
-          <p className="text-sm font-light">
-            Your subscription ends on{' '}
-            <span className="underline">
-              {luxon.DateTime.fromISO(profile.subscription_end_date).toFormat('dd LLLL yyyy')}
-            </span>
-            .{!profile.is_trial && ' You can cancel or upgrade your subscription at any time.'}
+      {profile ? (
+        <div className="flex flex-row items-center justify-between gap-6 rounded-lg border p-6">
+          <div className="space-y-1">
+            <h2 className="text-lg">
+              {profile.subscription_tier.toUpperCase()} subscription
+              {profile.is_trial && ' (Trial)'}
+            </h2>
+            <p className="text-sm font-light">
+              Your subscription ends on{' '}
+              <span className="underline">
+                {luxon.DateTime.fromISO(profile.subscription_end_date).toFormat('dd LLLL yyyy')}
+              </span>
+              .{!profile.is_trial && ' You can cancel or upgrade your subscription at any time.'}
+            </p>
+          </div>
+          {!profile.is_trial && (
+            <Button
+              className="w-fit"
+              variant="secondary"
+              onClick={() => openExternalUrl(stripeConfig.customerPortalLink)}
+            >
+              Manage Subscription
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="rounded-lg border p-6">
+          <h2 className="text-lg">CareerOS profile setup is not complete</h2>
+          <p className="text-sm text-muted-foreground">
+            Your local preferences are available. Subscription details will appear after the discovery data migration.
           </p>
         </div>
-        {!profile.is_trial && (
-          <Button
-            className="w-fit"
-            variant="secondary"
-            onClick={() => openExternalUrl(stripeConfig.customerPortalLink)}
-          >
-            Manage Subscription
-          </Button>
-        )}
-      </div>
+      )}
 
       <div className="flex justify-end pt-4">
         <Button className="w-fit" variant="destructive" onClick={onLogout}>

@@ -1,7 +1,7 @@
 import rehypeRaw from "rehype-raw"
 import remarkGfm from "remark-gfm"
 import Markdown from "react-markdown"
-import { Job } from "@first2apply/core"
+import { Job } from "@careeros/core"
 
 export type JobDescriptionProps = {
   job: Job

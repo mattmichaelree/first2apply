@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useError } from '@/hooks/error';
 import { useSession } from '@/hooks/session';
 import { loginWithEmail } from '@/lib/electronMainSdk';
-import { LoginCard, useLinks, useSites } from '@first2apply/ui';
+import { LoginCard, useLinks, useSites } from '@careeros/ui';
 
 /**
  * Component used to render the login page.

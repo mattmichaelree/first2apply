@@ -1,1 +1,1 @@
-export { useError } from '@first2apply/ui';
+export { useError } from '@careeros/ui';

@@ -1,6 +1,6 @@
-import { Button } from '@first2apply/ui';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@first2apply/ui';
-import { Badge } from '@first2apply/ui';
+import { Button } from '@careeros/ui';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@careeros/ui';
+import { Badge } from '@careeros/ui';
 
 export function TestUI() {
   return (

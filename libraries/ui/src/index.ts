@@ -33,6 +33,9 @@ export * from "./hooks/useToast"
 export * from "./hooks/useError"
 export * from "./hooks/useScrollToSection"
 export * from "./hooks/useSdk"
+export * from "./hooks/useIntelligenceSdk"
+export * from "./hooks/useSearchProfile"
+export * from "./hooks/useFilterRules"
 export * from "./hooks/useLinks"
 export * from "./hooks/useSites"
 
@@ -48,6 +51,7 @@ export * from "./components/jobs/jobsList"
 export * from "./components/jobs/jobSummary"
 export * from "./components/jobs/jobDescription"
 export * from "./components/jobs/jobCard"
+export * from "./components/jobs/jobExplanation"
 
 // Re-export auth components
 export * from "./auth/loginCard"

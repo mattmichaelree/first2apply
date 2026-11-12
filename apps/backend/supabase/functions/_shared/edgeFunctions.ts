@@ -1,6 +1,6 @@
-import { First2ApplyBackendEnv, parseEnv } from './env.ts';
+import { CareerOsBackendEnv, parseEnv } from './env.ts';
 
-import { DbSchema, User } from '@first2apply/core';
+import { DbSchema, User } from '@careeros/core';
 import { createClient } from '@supabase/supabasefork';
 
 import { ILogger } from './logger.ts';
@@ -11,7 +11,7 @@ export type EdgeFunctionAnonymousContext = {
   user: null; // always null when checkAuthorization is false
   supabaseClient: ReturnType<typeof createClient<DbSchema>>;
   supabaseAdminClient: ReturnType<typeof createClient<DbSchema>>;
-  env: First2ApplyBackendEnv;
+  env: CareerOsBackendEnv;
 };
 export type EdgeFunctionAuthorizedContext = Omit<EdgeFunctionAnonymousContext, 'user'> & {
   user: User; // non-optional when checkAuthorization is true

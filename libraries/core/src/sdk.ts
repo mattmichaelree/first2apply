@@ -1,5 +1,6 @@
 import type { User } from '@supabase/supabase-js';
 
+import type { JobIntelligenceApiSdk } from './intelligence-sdk';
 import type {
   AdvancedMatchingConfig,
   Job,
@@ -40,12 +41,12 @@ export interface ListJobsParams {
 }
 
 /**
- * First2Apply API SDK interface.
+ * CareerOS API SDK interface.
  *
  * This interface defines all API methods that can be implemented by different
  * platforms (Electron IPC for desktop, server actions for webapp).
  */
-export interface First2ApplyApiSdk {
+export interface CareerOsApiSdk {
   // ─────────────────────────────────────────────────────────────────────────────
   // Auth
   // ─────────────────────────────────────────────────────────────────────────────
@@ -173,3 +174,17 @@ export interface First2ApplyApiSdk {
     config: Pick<AdvancedMatchingConfig, 'chatgpt_prompt' | 'blacklisted_companies'>,
   ): Promise<AdvancedMatchingConfig>;
 }
+
+/**
+ * Transitional SDK shape for the forked product.
+ *
+ * Existing apps can continue implementing CareerOsApiSdk only.
+ * As the intelligence layer is wired in, apps can progressively implement
+ * JobIntelligenceApiSdk on the same object without a breaking SDK rewrite.
+ */
+export type ExtendedCareerOsApiSdk = CareerOsApiSdk & Partial<JobIntelligenceApiSdk>;
+
+/**
+ * Future-state SDK shape once the intelligence layer is fully integrated.
+ */
+export type FullProductApiSdk = CareerOsApiSdk & JobIntelligenceApiSdk;

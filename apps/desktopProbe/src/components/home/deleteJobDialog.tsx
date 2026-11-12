@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Job } from '@first2apply/core';
+import { Job } from '@careeros/core';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,8 +10,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@first2apply/ui';
-import { Checkbox } from '@first2apply/ui';
+} from '@careeros/ui';
+import { Checkbox } from '@careeros/ui';
 
 let SHOW_DELETE_WARNING = true;
 

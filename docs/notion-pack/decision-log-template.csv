@@ -1,0 +1,2 @@
+Date,Decision,Owner,Category,Decision Made,Rationale,Impact,Follow-Up Required,Links
+2026-03-25,Example decision,Founder,Architecture,"We will treat the inherited repo as a core acquisition, not final architecture.","This preserves speed while protecting our long-term moat.","Keeps inherited scrape/parse stable and shifts innovation to ranking/filtering.","Create extension schema; document boundaries.","Notion: Core Acquisition Plan"

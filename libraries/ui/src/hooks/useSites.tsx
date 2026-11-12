@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState } from "react"
-import type { JobSite } from "@first2apply/core"
+import type { JobSite } from "@careeros/core"
 
 import { useError } from "./useError"
 import { useSdk } from "./useSdk"
@@ -50,9 +50,10 @@ export const SitesProvider = ({
   const fetchSites = async () => {
     try {
       setSites(await sdk.listSites())
-      setIsLoading(false)
     } catch (error) {
       handleError({ error })
+    } finally {
+      setIsLoading(false)
     }
   }
 

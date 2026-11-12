@@ -19,6 +19,9 @@ export const plugins = [
     'MEZMO_API_KEY',
     'AMPLITUDE_API_KEY',
   ]),
+  new webpack.EnvironmentPlugin({
+    CAREEROS_JOB_SWEEP_EXTENSION_PATH: '',
+  }),
   new CopyWebpackPlugin({
     patterns: [{ from: path.join(__dirname, 'images'), to: 'images' }],
   }),

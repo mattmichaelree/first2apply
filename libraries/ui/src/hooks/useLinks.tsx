@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react"
-import type { Link, WebPageRuntimeData } from "@first2apply/core"
+import type { Link, WebPageRuntimeData } from "@careeros/core"
 
 import { useError } from "./useError"
 import { useSdk } from "./useSdk"
@@ -71,9 +71,10 @@ export const LinksProvider = ({
     try {
       const fetchedLinks = await sdk.listLinks()
       setLinks(fetchedLinks)
-      setIsLoading(false)
     } catch (error) {
       handleError({ error })
+    } finally {
+      setIsLoading(false)
     }
   }
 

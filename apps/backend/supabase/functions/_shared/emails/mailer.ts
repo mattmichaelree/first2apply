@@ -1,4 +1,4 @@
-import { getExceptionMessage } from '@first2apply/core';
+import { getExceptionMessage } from '@careeros/core';
 import { EmailParams, MailerSend, Recipient, Sender } from 'mailersend';
 
 import { EmailTemplate } from '../emails/emailTemplates.ts';

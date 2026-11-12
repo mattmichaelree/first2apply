@@ -1,5 +1,5 @@
-import { DbSchema, Profile } from '@first2apply/core';
-import { getExceptionMessage, throwError } from '@first2apply/core';
+import { DbSchema, Profile } from '@careeros/core';
+import { getExceptionMessage, throwError } from '@careeros/core';
 import { SupabaseClient } from '@supabase/supabasefork';
 
 import { CORS_HEADERS } from '../_shared/cors.ts';
@@ -53,8 +53,8 @@ Deno.serve(async (req) => {
     logger.info('Processing user profile change webhook ...');
 
     // check webhook signature
-    const webhookSecret = env.f2aWebhookSecret;
-    const signature = req.headers.get('x-f2a-webhook-secret');
+    const webhookSecret = env.careerosWebhookSecret;
+    const signature = req.headers.get('x-careeros-webhook-secret');
     if (signature !== webhookSecret) {
       throw new Error('Invalid webhook signature');
     }

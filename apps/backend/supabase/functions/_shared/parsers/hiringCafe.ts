@@ -38,7 +38,7 @@ export function parseHiringCafeJobs({ siteId, html }: { siteId: number; html: st
     const externalId = extractExternalId(href);
     if (!externalId) return null;
 
-    const externalUrl = `https://hiring.cafe${href}`;
+    const externalUrl = `https://hiringcafe.com${href}`;
 
     const card = findJobCard(link);
     if (!card) return null;

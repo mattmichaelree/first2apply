@@ -1,5 +1,5 @@
-import { JobSite, Link, SiteProvider, WebPageRuntimeData } from '@first2apply/core';
-import { getExceptionMessage } from '@first2apply/core';
+import { JobSite, Link, SiteProvider, WebPageRuntimeData } from '@careeros/core';
+import { getExceptionMessage } from '@careeros/core';
 
 import { CORS_HEADERS } from '../_shared/cors.ts';
 import { EdgeFunctionAuthorizedContext, getEdgeFunctionContext } from '../_shared/edgeFunctions.ts';
@@ -41,7 +41,10 @@ Deno.serve(async (req) => {
 
     // fetch links from db
     const linkIds = htmls.map((html) => html.linkId);
-    const { data: linksData, error: linksError } = await supabaseClient.from('links').select('*').in('id', linkIds);
+    const { data: linksData, error: linksError } = await supabaseClient
+      .from('discovery_links')
+      .select('*')
+      .in('id', linkIds);
     if (linksError) throw new Error(linksError.message);
     const links = linksData as Link[];
     logger.info(`found ${links.length} links`);
@@ -59,7 +62,9 @@ Deno.serve(async (req) => {
     }
 
     // list all job sites from db
-    const { data: jobSitesData, error: jobSitesError } = await supabaseClient.from('sites').select('*');
+    const { data: jobSitesData, error: jobSitesError } = await supabaseClient
+      .from('discovery_sites')
+      .select('*');
     if (jobSitesError) throw new Error(jobSitesError.message);
     const allJobSites = jobSitesData ?? [];
 
@@ -85,7 +90,7 @@ Deno.serve(async (req) => {
       ).then((r) => r.flat());
 
       const { data: upsertedJobs, error: insertError } = await supabaseClient
-        .from('jobs')
+        .from('discovery_jobs')
         .upsert(
           parsedJobs.map((job) => ({
             ...job,
@@ -236,7 +241,7 @@ async function handleParsingFailureForLink({
 
   // increment the failure count
   const { error: linkUpdateError } = await supabaseClient
-    .from('links')
+    .from('discovery_links')
     .update({ scrape_failure_count: link.scrape_failure_count + 1 })
     .eq('id', link.id);
   if (linkUpdateError) {
@@ -252,7 +257,7 @@ async function handleParsingFailureForLink({
     });
 
     // save the html dump for debugging
-    await supabaseClient.from('html_dumps').insert([{ url: link.url, html: html.content }]);
+    await supabaseClient.from('discovery_html_dumps').insert([{ url: link.url, html: html.content }]);
   }
 }
 
@@ -268,7 +273,7 @@ async function handleParsingSuccessForLink({
   const { logger, supabaseClient } = context;
   // when the parsing went ok, reset the failure count
   await supabaseClient
-    .from('links')
+    .from('discovery_links')
     .update({
       scrape_failure_count: 0,
       last_scraped_at: new Date(),
